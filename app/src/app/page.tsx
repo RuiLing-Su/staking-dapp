@@ -3,8 +3,14 @@
 import React from 'react';
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import { WalletProvider } from "@/lib/useWallet";
 import './globals.css';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { ConnectionProvider } from '@solana/wallet-adapter-react';
 
+import { CONFIG } from '@/lib/config';
+
+const wallets = [new PhantomWalletAdapter()];
 // 动态导入 StakingDapp 组件
 const StakingDapp = dynamic(
     () => import('../components/StakingDapp'),
@@ -46,7 +52,11 @@ export default function Home() {
                     </nav>
                 </header>
 
-                <StakingDapp />
+                <ConnectionProvider endpoint={CONFIG.RPC_ENDPOINT}>
+                    <WalletProvider>
+                        <StakingDapp />
+                    </WalletProvider>
+                </ConnectionProvider>
 
                 {/* 页脚 */}
                 <footer className="mt-16 text-center text-gray-500 text-sm">

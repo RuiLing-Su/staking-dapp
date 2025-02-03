@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
-import {Share2} from "lucide-react";
+import { Share2 } from "lucide-react";
 
 /**
  * 推荐面板组件
- * @param userInfo
- * @constructor
+ * @param {Object} props
+ * @param {Object} props.userInfo - 用户信息对象
  */
 const ReferralPanel = ({ userInfo }) => {
     const [copied, setCopied] = useState(false);
+
+    // 如果 userInfo 为空，显示加载状态
+    if (!userInfo) {
+        return (
+            <div className="bg-gray-50 p-6 rounded-lg mb-8">
+                <div className="flex items-center space-x-2 mb-4">
+                    <Share2 className="text-gray-400" />
+                    <h3 className="text-lg font-semibold">推荐链接</h3>
+                </div>
+                <div className="text-gray-500">正在加载用户信息...</div>
+            </div>
+        );
+    }
+
     const referralLink = `https://solana.com/ref/${userInfo.referralCode}`;
 
     const handleCopy = async () => {

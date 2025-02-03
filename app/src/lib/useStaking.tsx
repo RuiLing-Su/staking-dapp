@@ -11,6 +11,10 @@ export const useStaking = () => {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [packages, setPackages] = useState<StakingPackage[]>([]);
 
+    /**
+     * 初始化质押
+     * @param referrerPubkey
+     */
     const initializeStaking = async (referrerPubkey: PublicKey) => {
         if (!client) throw new Error('Client not initialized');
 
@@ -21,11 +25,15 @@ export const useStaking = () => {
             // 获取质押池地址
             const poolAddress = await client.getPoolAddress();
 
-            // 创建用户账户
-            const userInfoAddress = await client.createUser(
-                client.wallet.publicKey,
-                referrerPubkey
-            );
+            // 检查用户账户是否已存在
+            const userInfoAddress = await client.getUserInfoAddress();
+            let userInfo = await client.getUserInfo(userInfoAddress);
+
+            // 如果用户账户不存在，则创建
+            if (!userInfo) {
+                await client.createUser(referrerPubkey);
+                userInfo = await client.getUserInfo(userInfoAddress);
+            }
 
             // 创建质押包
             const packageAddress = await client.createPackage(
@@ -37,7 +45,7 @@ export const useStaking = () => {
             // 质押代币
             await client.stake(poolAddress, userInfoAddress, 1000_000_000);
 
-            // 获取最新用户信息
+            // 获取最新用户信息并更新状态
             const updatedUserInfo = await client.getUserInfo(userInfoAddress);
             setUserInfo(updatedUserInfo);
 
@@ -50,6 +58,10 @@ export const useStaking = () => {
         }
     };
 
+    /**
+     * 刷新用户信息
+     * @param userInfoAddress
+     */
     const refreshUserInfo = async (userInfoAddress: PublicKey) => {
         if (!client) return;
 

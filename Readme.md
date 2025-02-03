@@ -32,7 +32,8 @@ staking-dapp/
 │   │   │   ├── LevelGuide.tsx        # 等级指南组件
 │   │   │   ├── RewardsPanel.tsx      # 奖励面板组件
 │   │   │   ├── Notification.tsx      # 通知组件
-│   │   │   └── ReferralSystem.tsx    # 推荐系统组件
+│   │   │   ├── ReferralSystem.tsx    # 推荐系统组件
+│   │   │   └── WalletConnect.tsx     # 钱包连接组件
 │   │   ├── lib/
 │   │   │   ├── staking-client.ts     # 合约交互
 │   │   │   ├── config.ts             # 配置文件
