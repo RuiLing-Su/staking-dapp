@@ -21,14 +21,13 @@ pub struct Initialize<'info> {
 
 pub fn initialize(
     ctx: Context<Initialize>,
-    daily_rate: u64,     // 3000 表示 3‰
-    max_multiplier: u64, // 15000 表示 1.5x
-    min_stake: u64,      // 最小质押量 (100 USDC)
-    direct_bonus: u64,   // 3000 表示 30%
-    indirect_bonus: u64, // 1000 表示 10%
+    daily_rate: u64,      // 3000 表示 3‰
+    max_multiplier: u64,   // 15000 表示 1.5x
+    min_stake: u64,       // 最小质押量 (100 USDC)
+    direct_bonus: u64,    // 3000 表示 30%
+    indirect_bonus: u64,  // 1000 表示 10%
 ) -> Result<()> {
     let pool = &mut ctx.accounts.pool;
-
     pool.admin = ctx.accounts.admin.key();
     pool.stake_mint = ctx.accounts.stake_mint.key();
     pool.reward_mint = ctx.accounts.reward_mint.key();
@@ -41,6 +40,5 @@ pub fn initialize(
     pool.indirect_bonus = indirect_bonus;
     pool.total_users = 0;
     pool.global_reward_pool = 0;
-
     Ok(())
 }

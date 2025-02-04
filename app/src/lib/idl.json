@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "name": "staking_program",
-  "address": "3uaZoVMqu6aQeTmSHpAhCtfP9VdCqEGgQLjPsSDNukhq",
+  "address": "C8L3o7KLmohoKRc7CFsEQhbJzV9cRKUHCnV3J4BzAF5o",
   "instructions": [
     {
       "name": "auto_release_rewards",
@@ -32,7 +32,9 @@
         { "name": "referrer", "isMut": false, "isSigner": false },
         { "name": "system_program", "isMut": false, "isSigner": false }
       ],
-      "args": []
+      "args": [
+        { "name": "referrer", "type": { "option": "publicKey" } }
+      ]
     },
     {
       "name": "exit_package",
@@ -102,6 +104,7 @@
       "type": {
         "kind": "struct",
         "fields": [
+          { "name": "id", "type": "publicKey" },
           { "name": "owner", "type": "publicKey" },
           { "name": "amount", "type": "u64" },
           { "name": "base_release", "type": "u64" },
@@ -109,7 +112,7 @@
           { "name": "current_total", "type": "u64" },
           { "name": "max_total", "type": "u64" },
           { "name": "created_at", "type": "i64" },
-          { "name": "is_active", "type": "bool" }
+          { "name": "status", "type": { "defined": "PackageStatus" } }
         ]
       }
     },
@@ -148,18 +151,104 @@
           { "name": "level", "type": "u8" },
           { "name": "team_performance", "type": "u64" },
           { "name": "is_active", "type": "bool" },
-          { "name": "packages_count", "type": "u64" }
+          { "name": "packages_count", "type": "u64" },
+          { "name": "role", "type": { "defined": "UserRole" } }
         ]
       }
     }
   ],
   "errors": [
-    { "code": 6000, "name": "MinimumStakeNotMet", "msg": "最小质押量未满足" },
-    { "code": 6001, "name": "Overflow", "msg": "算术溢出错误" },
-    { "code": 6002, "name": "UserNotActive", "msg": "用户未激活" },
-    { "code": 6003, "name": "MaxMultiplierReached", "msg": "已达到最大收益倍数" },
-    { "code": 6004, "name": "InsufficientBalance", "msg": "提现金额超过可用余额" },
-    { "code": 6005, "name": "PackageNotMatured", "msg": "质押包未达到出局条件" },
-    { "code": 6006, "name": "PackageNotActive", "msg": "质押包未激活" }
+    { "code": 6000, "name": "UserAlreadyInitialized", "msg": "用户已经初始化" },
+    { "code": 6001, "name": "ReferrerNotFound", "msg": "推荐人不存在" },
+    { "code": 6002, "name": "InvalidReferrer", "msg": "无效的推荐人" },
+    { "code": 6003, "name": "MinimumStakeNotMet", "msg": "最小质押量未满足" },
+    { "code": 6004, "name": "Overflow", "msg": "算术溢出错误" },
+    { "code": 6005, "name": "UserNotActive", "msg": "用户未激活" },
+    { "code": 6006, "name": "MaxMultiplierReached", "msg": "已达到最大收益倍数" },
+    { "code": 6007, "name": "InsufficientBalance", "msg": "提现金额超过可用余额" },
+    { "code": 6008, "name": "PackageNotMatured", "msg": "质押包未达到出局条件" },
+    { "code": 6009, "name": "PackageNotActive", "msg": "质押包未激活" }
+  ],
+  "types": [
+    {
+      "name": "PackageStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Active" },
+          { "name": "Completed" },
+          { "name": "Withdrawn" }
+        ]
+      }
+    },
+    {
+      "name": "StakingPackage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "id", "type": "publicKey" },
+          { "name": "owner", "type": "publicKey" },
+          { "name": "amount", "type": "u64" },
+          { "name": "base_release", "type": "u64" },
+          { "name": "accelerated_release", "type": "u64" },
+          { "name": "current_total", "type": "u64" },
+          { "name": "max_total", "type": "u64" },
+          { "name": "created_at", "type": "i64" },
+          { "name": "status", "type": { "defined": "PackageStatus" } }
+        ]
+      }
+    },
+    {
+      "name": "StakingPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin", "type": "publicKey" },
+          { "name": "stake_mint", "type": "publicKey" },
+          { "name": "reward_mint", "type": "publicKey" },
+          { "name": "meme_mint", "type": "publicKey" },
+          { "name": "total_staked", "type": "u64" },
+          { "name": "daily_rate", "type": "u64" },
+          { "name": "max_multiplier", "type": "u64" },
+          { "name": "min_stake", "type": "u64" },
+          { "name": "direct_bonus", "type": "u64" },
+          { "name": "indirect_bonus", "type": "u64" },
+          { "name": "total_users", "type": "u32" },
+          { "name": "global_reward_pool", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "UserInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "user", "type": "publicKey" },
+          { "name": "referrer", "type": "publicKey" },
+          { "name": "staked_amount", "type": "u64" },
+          { "name": "rewards_claimed", "type": "u64" },
+          { "name": "last_claim_time", "type": "i64" },
+          { "name": "direct_referrals", "type": "u32" },
+          { "name": "indirect_referrals", "type": "u32" },
+          { "name": "level", "type": "u8" },
+          { "name": "team_performance", "type": "u64" },
+          { "name": "is_active", "type": "bool" },
+          { "name": "packages_count", "type": "u64" },
+          { "name": "role", "type": { "defined": "UserRole" } }
+        ]
+      }
+    },
+    {
+      "name": "UserRole",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "User" },
+          { "name": "ReferralMaster" },
+          { "name": "TeamLeader" },
+          { "name": "Admin" }
+        ]
+      }
+    }
   ]
 }

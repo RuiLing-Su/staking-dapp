@@ -1,84 +1,121 @@
-
-import { useState, useEffect } from 'react';
-import { PublicKey } from '@solana/web3.js';
+import { useState, useEffect, useCallback } from 'react';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { BN } from '@project-serum/anchor';
 import { useWallet } from './useWallet';
-import { StakingPackage, UserInfo } from './types';
+import { StakingPackage, UserInfo, PackageStatus } from './types';
 
 export const useStaking = () => {
-    const { client } = useWallet();
+    const { client, connected } = useWallet();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [packages, setPackages] = useState<StakingPackage[]>([]);
 
     /**
-     * 初始化质押
-     * @param referrerPubkey
+     * 初始化用户账户方法
      */
-    const initializeStaking = async (referrerPubkey: PublicKey) => {
-        if (!client) throw new Error('Client not initialized');
+    const initializeStaking = useCallback(async (referrerPubkey?: PublicKey) => {
+        if (!client) throw new Error('StakingClient is not initialized');
+
+        setLoading(true);
+        setError(null);
 
         try {
-            setLoading(true);
-            setError(null);
+            // 调用 StakingClient 的 initializeUserAccount 方法
+            const userInfo = await client.initializeUserAccount(referrerPubkey);
+            setUserInfo(userInfo);
 
-            // 获取质押池地址
-            const poolAddress = await client.getPoolAddress();
+            // 获取用户质押包
+            const activePackages = await client.getUserPackages();
+            setPackages(activePackages);
 
-            // 检查用户账户是否已存在
-            const userInfoAddress = await client.getUserInfoAddress();
-            let userInfo = await client.getUserInfo(userInfoAddress);
-
-            // 如果用户账户不存在，则创建
-            if (!userInfo) {
-                await client.createUser(referrerPubkey);
-                userInfo = await client.getUserInfo(userInfoAddress);
-            }
-
-            // 创建质押包
-            const packageAddress = await client.createPackage(
-                poolAddress,
-                userInfoAddress,
-                1000_000_000 // 1000 USDC (6位小数)
-            );
-
-            // 质押代币
-            await client.stake(poolAddress, userInfoAddress, 1000_000_000);
-
-            // 获取最新用户信息并更新状态
-            const updatedUserInfo = await client.getUserInfo(userInfoAddress);
-            setUserInfo(updatedUserInfo);
-
-            return { userInfoAddress, packageAddress };
+            return userInfo;
         } catch (err) {
-            setError(err as Error);
+            setError(err instanceof Error ? err : new Error('Initialization failed'));
             throw err;
         } finally {
             setLoading(false);
         }
-    };
+    }, [client]);
 
     /**
-     * 刷新用户信息
-     * @param userInfoAddress
+     * 创建质押
      */
-    const refreshUserInfo = async (userInfoAddress: PublicKey) => {
+    const createStake = useCallback(async (amount: BN) => {
+        if (!client) throw new Error('Client not initialized');
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            // 创建质押包
+            const newPackage = await client.createAndStakePackage(amount);
+
+            // Refresh user info and packages
+            await refreshUserInfo();
+
+            return newPackage;
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Staking failed'));
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [client]);
+
+    /**
+     * 退出质押
+     * @param packageAddress
+     */
+    const exitPackage = useCallback(async (packageId: PublicKey) => {
+        if (!client) throw new Error('Client not initialized');
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            // Exit the specified package
+            await client.exitPackage(packageId);
+
+            // Refresh user info and packages
+            await refreshUserInfo();
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error('Package exit failed'));
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [client]);
+    /**
+     * 刷新用户信息和质押包
+     */
+    const refreshUserInfo = useCallback(async () => {
         if (!client) return;
 
         try {
-            const info = await client.getUserInfo(userInfoAddress);
-            setUserInfo(info);
+            const userInfo = await client.getUserInfo();
+            const activePackages = await client.getUserPackages();
+
+            setUserInfo(userInfo);
+            setPackages(activePackages);
         } catch (err) {
-            console.error('Failed to refresh user info:', err);
+            console.error('Failed to refresh user info', err);
         }
-    };
+    }, [client]);
+    useEffect(() => {
+        if (connected && client) {
+            refreshUserInfo();
+        }
+    }, [connected, client, refreshUserInfo]);
 
     return {
-        initializeStaking,
-        refreshUserInfo,
         loading,
         error,
         userInfo,
         packages,
+        initializeStaking,
+        createStake,
+        exitPackage,
+        refreshUserInfo
     };
 };

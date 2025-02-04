@@ -2,6 +2,12 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum StakingError {
+    #[msg("用户已经初始化")]
+    UserAlreadyInitialized,
+    #[msg("推荐人不存在")]
+    ReferrerNotFound,
+    #[msg("无效的推荐人")]
+    InvalidReferrer,
     #[msg("最小质押量未满足")]
     MinimumStakeNotMet,
     #[msg("算术溢出错误")]

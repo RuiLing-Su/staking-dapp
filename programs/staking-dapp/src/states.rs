@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::status_enum::{PackageStatus, UserRole};
 
 #[account]
 pub struct StakingPool {
@@ -29,10 +30,12 @@ pub struct UserInfo {
     pub team_performance: u64,
     pub is_active: bool,
     pub packages_count: u64,
+    pub role: UserRole,
 }
 
 #[account]
 pub struct StakingPackage {
+    pub id: Pubkey,
     pub owner: Pubkey,
     pub amount: u64,
     pub base_release: u64,
@@ -40,5 +43,6 @@ pub struct StakingPackage {
     pub current_total: u64,
     pub max_total: u64,
     pub created_at: i64,
-    pub is_active: bool,
+    pub status: PackageStatus,
 }
+

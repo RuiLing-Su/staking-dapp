@@ -4,11 +4,12 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 pub mod errors;
 pub mod instructions;
 pub mod states;
+mod status_enum;
 
 use instructions::*;
 use states::*;
 
-declare_id!("3uaZoVMqu6aQeTmSHpAhCtfP9VdCqEGgQLjPsSDNukhq");
+declare_id!("C8L3o7KLmohoKRc7CFsEQhbJzV9cRKUHCnV3J4BzAF5o");
 
 #[program]
 pub mod staking_program {
@@ -34,8 +35,11 @@ pub mod staking_program {
     }
 
     // 创建用户账户
-    pub fn create_user(ctx: Context<CreateUser>) -> Result<()> {
-        instructions::create_user(ctx)
+    pub fn create_user(
+        ctx: Context<CreateUser>,
+        referrer: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::create_user(ctx, referrer)
     }
 
     // 创建质押包

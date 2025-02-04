@@ -3,6 +3,7 @@ use crate::instructions::{calculate_level_bonus, calculate_referral_bonus};
 use crate::states::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use crate::status_enum::PackageStatus;
 
 /**
  * 出局
@@ -26,16 +27,15 @@ pub struct ExitPackage<'info> {
     pub admin: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
+
 pub fn exit_package(ctx: Context<ExitPackage>) -> Result<()> {
-    let pool = &ctx.accounts.pool;
-    let user_info = &mut ctx.accounts.user_info;
     let package = &mut ctx.accounts.staking_package;
 
     // 验证包是否达到最大收益
     require!(
-        package.current_total >= package.max_total,
-        StakingError::PackageNotMatured
-    );
+            package.status == PackageStatus::Completed,
+            StakingError::PackageNotMatured
+        );
 
     // 50%兑换成SOL和MEME
     let sol_reward = package.current_total.checked_div(2).unwrap();
@@ -68,15 +68,13 @@ pub fn exit_package(ctx: Context<ExitPackage>) -> Result<()> {
     )?;
 
     // 更新包状态
-    package.is_active = false;
+    package.status = PackageStatus::Withdrawn;
 
     // 更新用户信息
+    let user_info = &mut ctx.accounts.user_info;
     user_info.staked_amount = user_info.staked_amount.checked_sub(package.amount).unwrap();
     user_info.packages_count = user_info.packages_count.checked_sub(1).unwrap();
-    user_info.rewards_claimed = user_info
-        .rewards_claimed
-        .checked_add(package.current_total)
-        .unwrap();
+    user_info.rewards_claimed = user_info.rewards_claimed.checked_add(package.current_total).unwrap();
 
     Ok(())
 }

@@ -2,6 +2,7 @@ use crate::instructions::{calculate_level_bonus, calculate_referral_bonus};
 use crate::states::*;
 use anchor_lang::prelude::*;
 use crate::StakingError;
+use crate::status_enum::PackageStatus;
 
 /**
  * 创建质押包
@@ -18,7 +19,11 @@ pub struct CreatePackage<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn create_package(ctx: Context<CreatePackage>, amount: u64) -> Result<()> {
+// 创建质押包
+pub fn create_package(
+    ctx: Context<CreatePackage>,
+    amount: u64
+) -> Result<()> {
     let pool = &ctx.accounts.pool;
     let user_info = &mut ctx.accounts.user_info;
     let package = &mut ctx.accounts.staking_package;
@@ -29,9 +34,9 @@ pub fn create_package(ctx: Context<CreatePackage>, amount: u64) -> Result<()> {
     // 计算基础释放量
     let base_release = amount
         .checked_mul(pool.daily_rate)
-        .ok_or(StakingError::Overflow)?
+        .unwrap()
         .checked_div(10000)
-        .ok_or(StakingError::Overflow)?;
+        .unwrap(); // 3‰
 
     // 计算推荐加速
     let referral_bonus = calculate_referral_bonus(pool, user_info, base_release)?;
@@ -40,20 +45,17 @@ pub fn create_package(ctx: Context<CreatePackage>, amount: u64) -> Result<()> {
     let level_bonus = calculate_level_bonus(pool, user_info, base_release)?;
 
     // 初始化质押包
-    package.owner = ctx.accounts.user.key();
+    let package_id = ctx.accounts.staking_package.key();
+    let package = &mut ctx.accounts.staking_package;
+
+    package.id = package_id;
     package.amount = amount;
     package.base_release = base_release;
-    package.accelerated_release = referral_bonus
-        .checked_add(level_bonus)
-        .ok_or(StakingError::Overflow)?;
+    package.accelerated_release = referral_bonus.checked_add(level_bonus).unwrap();
     package.current_total = 0;
-    package.max_total = amount
-        .checked_mul(15000)
-        .ok_or(StakingError::Overflow)?
-        .checked_div(10000)
-        .ok_or(StakingError::Overflow)?;
+    package.max_total = amount.checked_mul(pool.max_multiplier).unwrap().checked_div(10000).unwrap();
     package.created_at = Clock::get()?.unix_timestamp;
-    package.is_active = true;
+    package.status = PackageStatus::Active;
 
     Ok(())
 }
