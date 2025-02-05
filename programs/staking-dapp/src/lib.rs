@@ -9,7 +9,7 @@ mod status_enum;
 use instructions::*;
 use states::*;
 
-declare_id!("C8L3o7KLmohoKRc7CFsEQhbJzV9cRKUHCnV3J4BzAF5o");
+declare_id!("uTZ8wu8fGyEMu3vz1kTMztAZTCCfeNZrjEW6nZ91ksa");
 
 #[program]
 pub mod staking_program {

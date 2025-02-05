@@ -102,11 +102,27 @@ export const useStaking = () => {
             console.error('Failed to refresh user info', err);
         }
     }, [client]);
+
+    // useEffect(() => {
+    //     if (connected && client) {
+    //         refreshUserInfo();
+    //     }
+    // }, [connected, client, refreshUserInfo]);
+
     useEffect(() => {
         if (connected && client) {
-            refreshUserInfo();
+            (async () => {
+                try {
+                    console.log("🔄 Checking if UserInfo exists...");
+                    await initializeStaking();
+                    console.log("✅ UserInfo initialized!");
+                } catch (error) {
+                    console.error("❌ Failed to initialize UserInfo:", error);
+                }
+            })();
         }
-    }, [connected, client, refreshUserInfo]);
+    }, [connected, client]);
+
 
     return {
         loading,

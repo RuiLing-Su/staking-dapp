@@ -5,6 +5,3 @@ node_modules
 target
 test-ledger
 .yarn
-# env files
-app/.env.local
-.env.*.local

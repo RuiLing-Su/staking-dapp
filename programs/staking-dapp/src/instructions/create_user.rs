@@ -9,7 +9,8 @@ use crate::status_enum::UserRole;
 #[derive(Accounts)]
 pub struct CreateUser<'info> {
     /// 初始化用户信息账户，设置支付者为 user，分配 8 + 200 字节的空间
-    #[account(init, payer = user, space = 8 + 200)]
+    /// bump 会自动计算并存储在 ctx.accounts 中的 bump 字段中
+    #[account(init, payer = user, space = 8 + 200, seeds = [b"user_info", user.key().as_ref()], bump)]
     pub user_info: Account<'info, UserInfo>,
     /// 用户账户，作为交易的签名者
     #[account(mut)]
