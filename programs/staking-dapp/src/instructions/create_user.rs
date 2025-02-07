@@ -26,6 +26,8 @@ pub struct CreateUser<'info> {
  * 创建用户函数
  * 初始化用户信息，并记录用户的基本信息
  */
+
+
 pub fn create_user(
     ctx: Context<CreateUser>,
     referrer: Option<Pubkey>

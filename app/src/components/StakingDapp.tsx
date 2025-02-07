@@ -13,6 +13,7 @@ import StakingPackage from "@/components/StakingPackage";
 import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
 import '@/app/globals.css';
+import ReferralSystem from "@/components/ReferralSystem";
 
 interface Notification {
     message: string;
@@ -266,6 +267,7 @@ const StakingDapp = () => {
 
                         {/* 推荐面板 */}
                         <ReferralPanel userInfo={userInfo} />
+                        <ReferralSystem/>
 
                         {/* 等级指南 */}
                         <LevelGuide userInfo={userInfo} />
