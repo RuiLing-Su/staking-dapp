@@ -10,6 +10,7 @@ import StakingPackage from "@/components/StakingPackage";
 import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
 import '@/app/globals.css';
+import WalletConnectSection from "@/components/WalletConnectSection";
 
 
 /**
@@ -52,6 +53,17 @@ const StakingDapp = () => {
     const connectWallet = async () => {
         try {
             setLoading(true);
+            // 1. 获取 Phantom 钱包对象
+            const phantomWallet = window.solana;
+            if (!phantomWallet) {
+                throw new Error('请先安装 Phantom 钱包');
+            }
+
+            // 2. 确保钱包处于已连接状态
+            if (!phantomWallet.isConnected) {
+                await phantomWallet.connect();
+            }
+
             await new Promise(resolve => setTimeout(resolve, 1000));
             setConnected(true);
             showNotification('钱包连接成功');
@@ -239,17 +251,7 @@ const StakingDapp = () => {
             <div className="bg-white rounded-lg shadow-xl p-6">
                 {!connected ? (
                     <div className="text-center py-10">
-                        <button
-                            onClick={connectWallet}
-                            disabled={loading}
-                            className={`px-6 py-3 rounded-lg font-semibold transition-colors duration-200 ${
-                                loading
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                            }`}
-                        >
-                            {loading ? '连接中...' : '连接钱包'}
-                        </button>
+                        <WalletConnectSection onConnect={connectWallet} loading={loading} />
                     </div>
                 ) : (
                     <motion.div
