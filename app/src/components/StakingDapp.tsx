@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Users, Award, TrendingUp, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PublicKey } from "@solana/web3.js";
-import { useWallet } from "@/lib/useWallet";
-import { useStaking } from '@/lib/useStaking';
-import WalletConnectSection from "@/components/WalletConnectSection";
+import { useWallet } from "@/lib/hooks/useWallet";
+import { useStaking } from '@/lib/hooks/useStaking';
+import AuthSection from "@/components/Auth/AuthSection";
 import ReferralPanel from "@/components/ReferralPanel";
 import RewardsPanel from "@/components/RewardsPanel";
 import StatsCard from "@/components/StatsCard";
@@ -14,6 +14,7 @@ import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
 import '@/app/globals.css';
 import ReferralSystem from "@/components/ReferralSystem";
+import { connectToPhantomWallet } from '@/utils/wallet';
 
 interface Notification {
     message: string;
@@ -50,35 +51,19 @@ const StakingDapp = () => {
     const handleConnectWallet = async () => {
         try {
             setLoading(true);
+            // 使用公共函数确保钱包连接
+            await connectToPhantomWallet();
+            // 调用 useWallet 提供的 connect 方法
+            await connect((window as any).solana);
 
-            // 1. 获取 Phantom 钱包对象
-            const phantomWallet = window.solana;
-            if (!phantomWallet) {
-                throw new Error('请先安装 Phantom 钱包');
-            }
+            // 如果 URL 中存在推荐人参数，注册时传入
+            const urlParams = new URLSearchParams(window.location.search);
+            const referrer = urlParams.get('ref');
+            const referrerPubkey = referrer ? new PublicKey(referrer) : undefined;
 
-            // 2. 确保钱包处于已连接状态
-            if (!phantomWallet.isConnected) {
-                await phantomWallet.connect();
-            }
-
-            // 3. 调用 useWallet 的 connect 方法初始化
-            await connect(phantomWallet);
-
-            // 4. 初始化用户
             if (client) {
-                try {
-                    // 获取URL中的推荐人地址
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const referrer = urlParams.get('ref');
-                    const referrerPubkey = referrer ? new PublicKey(referrer) : undefined;
-
-                    await initializeStaking(referrerPubkey);
-                    showNotification('用户信息初始化成功')
-
-                } catch (error) {
-                    console.error('用户信息初始化失败', error);
-                }
+                await initializeStaking(referrerPubkey);
+                showNotification('用户信息初始化成功');
             }
 
             showNotification('钱包连接成功');
@@ -121,7 +106,7 @@ const StakingDapp = () => {
     };
 
     /**
-     * 处理退出逻辑
+     * 处理退出质押包逻辑
      * @param packageId
      */
     const handleExitPackage = async (packageId: string) => {
@@ -188,8 +173,8 @@ const StakingDapp = () => {
 
             <div className="bg-white rounded-lg shadow-xl p-6">
                 {!connected ? (
-                    <WalletConnectSection
-                        onConnect={handleConnectWallet}
+                    <AuthSection
+                        onConnectWallet={handleConnectWallet}
                         loading={loading || walletConnecting}
                     />
                 ) : (

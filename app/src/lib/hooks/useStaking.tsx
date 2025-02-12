@@ -1,8 +1,9 @@
+"use client";
 import { useState, useEffect, useCallback } from 'react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { BN } from '@project-serum/anchor';
 import { useWallet } from './useWallet';
-import { StakingPackage, UserInfo, PackageStatus } from './types';
+import { StakingPackage, UserInfo } from '../types';
 
 export const useStaking = () => {
     const { client, connected } = useWallet();
@@ -39,6 +40,23 @@ export const useStaking = () => {
     }, [client]);
 
     /**
+     * 刷新用户信息和质押包
+     */
+    const refreshUserInfo = useCallback(async () => {
+        if (!client) return;
+
+        try {
+            const userInfo = await client.getUserInfo();
+            const activePackages = await client.getUserPackages();
+
+            setUserInfo(userInfo);
+            setPackages(activePackages);
+        } catch (err) {
+            console.error('Failed to refresh user info', err);
+        }
+    }, [client]);
+
+    /**
      * 创建质押
      */
     const createStake = useCallback(async (amount: BN) => {
@@ -61,7 +79,7 @@ export const useStaking = () => {
         } finally {
             setLoading(false);
         }
-    }, [client]);
+    }, [client, refreshUserInfo]);
 
     /**
      * 退出质押
@@ -85,29 +103,7 @@ export const useStaking = () => {
         } finally {
             setLoading(false);
         }
-    }, [client]);
-    /**
-     * 刷新用户信息和质押包
-     */
-    const refreshUserInfo = useCallback(async () => {
-        if (!client) return;
-
-        try {
-            const userInfo = await client.getUserInfo();
-            const activePackages = await client.getUserPackages();
-
-            setUserInfo(userInfo);
-            setPackages(activePackages);
-        } catch (err) {
-            console.error('Failed to refresh user info', err);
-        }
-    }, [client]);
-
-    // useEffect(() => {
-    //     if (connected && client) {
-    //         refreshUserInfo();
-    //     }
-    // }, [connected, client, refreshUserInfo]);
+    }, [client, refreshUserInfo]);
 
     useEffect(() => {
         if (connected && client) {
@@ -121,7 +117,7 @@ export const useStaking = () => {
                 }
             })();
         }
-    }, [connected, client]);
+    }, [connected, client, initializeStaking]);
 
 
     return {

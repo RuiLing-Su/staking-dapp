@@ -1,10 +1,12 @@
+"use client";
+
 import React, { useState, useCallback, createContext, useContext, useEffect } from 'react';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { Program, AnchorProvider, web3 } from '@project-serum/anchor';
-import { StakingClient } from './staking-client';
-import { WalletState, WalletContextState } from './types';
-import { CONFIG } from './config';
-import Idl from './idl.json';
+import { StakingClient } from '../staking-client';
+import { WalletState, WalletContextState } from '../types';
+import { CONFIG } from '../config';
+import Idl from '../idl.json';
 
 // 检查钱包网络
 const checkWalletNetwork = async (phantomWallet: any) => {
@@ -72,6 +74,9 @@ const initialState: WalletState = {
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, setState] = useState<WalletState>(initialState);
 
+    /**
+     * 钱包连接
+     */
     const connect = useCallback(async (phantomWallet: any) => {
         if (state.connecting) return;
 
