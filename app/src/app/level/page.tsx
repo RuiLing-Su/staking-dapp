@@ -11,18 +11,19 @@ const LevelPage = () => {
   const { userInfo } = useStaking();
 
   return (
-    <motion.div
+    <motion.div 
+      className="space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {connected ? (
         <>
-          <h2 className="text-2xl font-bold mb-4">等级指南</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">等级指南</h2>
           <LevelGuide userInfo={userInfo} />
         </>
       ) : (
-        <p>请先连接钱包</p>
+        <p className="text-center text-xl text-gray-700">请先连接钱包</p>
       )}
     </motion.div>
   );

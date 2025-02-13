@@ -22,10 +22,7 @@ export interface LoginResponse {
 }
 
 export interface LoginCredentials {
-    nickname: string;
     wallet_address: string;
-    invite_code?: string;
-    avatar?: string;
 }
 
 export interface RegisterCredentials {

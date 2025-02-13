@@ -20,13 +20,11 @@ interface Notification {
     message: string;
     type: 'success' | 'error';
 }
+
 const StakingDapp = () => {
-    // 从钱包上下文中获取状态和连接方法
-    const { client, connected, connecting: walletConnecting, connect } = useWallet();
-    // 从质押 Hook 中获取相关操作和状态
+    const { client, connected, connecting, connect } = useWallet();
     const {
         loading: stakingLoading,
-        error: stakingError,
         userInfo,
         packages,
         initializeStaking,
@@ -34,125 +32,99 @@ const StakingDapp = () => {
         exitPackage,
         refreshUserInfo
     } = useStaking();
-    // 本地状态：loading、通知信息、输入的质押金额
     const [notification, setNotification] = useState<Notification | null>(null);
     const [stakeAmount, setStakeAmount] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // 显示通知函数，3秒后自动关闭通知
-    const showNotification = (message: string, type = 'success') => {
+    // 显示通知（3秒后自动隐藏）
+    const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
     };
 
-    /**
-     * 处理钱包连接逻辑
-     */
-    const handleConnectWallet = async (userInfo?: User) => {
+    // 登录流程：通过钱包连接后初始化用户信息
+    const handleConnectWallet = async () => {
         try {
             setLoading(true);
-            await connectToPhantomWallet();
+            // 在这里直接调用 WalletProvider 中的 connect 方法（传入 window.solana 作为 phantom 钱包实例）
             await connect((window as any).solana);
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const referrer = urlParams.get('ref');
-            const referrerPubkey = referrer ? new PublicKey(referrer) : undefined;
-
-            if (client) {
-                await initializeStaking(referrerPubkey, userInfo);
-                showNotification('用户信息初始化成功');
-            }
-
-            showNotification('钱包连接成功');
+            await initializeStaking();
+            showNotification('钱包连接成功，用户信息初始化成功');
         } catch (error) {
             console.error('连接钱包失败:', error);
-            showNotification((error as Error).message, 'error');
+            showNotification((error as Error)?.message || '钱包连接失败', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    /**
-     * 处理质押逻辑
-     */
+    // 质押操作
     const handleStake = async () => {
         if (!client || !stakeAmount) {
             showNotification('请先连接钱包并输入质押金额', 'error');
             return;
         }
-
         try {
             setLoading(true);
             const amount = Number(stakeAmount);
             if (amount < 100) {
                 throw new Error('最低质押金额为 100 USDC');
             }
-
-            // 将 USDC 金额转换为正确的精度 (6位小数)
             const amountWithDecimals = amount * 1_000_000;
             await createStake(amountWithDecimals);
-
             setStakeAmount('');
             showNotification(`成功质押 ${amount} USDC`);
         } catch (error) {
             console.error('质押失败:', error);
-            showNotification((error as Error).message, 'error');
+            showNotification((error as Error)?.message || '质押失败', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    /**
-     * 处理退出质押包逻辑
-     * @param packageId
-     */
+    // 退出质押包操作
     const handleExitPackage = async (packageId: string) => {
         if (!client) return;
-
         try {
             setLoading(true);
             await exitPackage(new PublicKey(packageId));
             showNotification('成功退出质押包并领取奖励');
         } catch (error) {
             console.error('退出失败:', error);
-            showNotification((error as Error).message, 'error');
+            showNotification((error as Error)?.message || '退出失败', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    // 监听钱包连接状态变化，自动刷新用户信息
     useEffect(() => {
         if (connected && client) {
             refreshUserInfo();
         }
-    }, [connected, client]);
+    }, [connected, client, refreshUserInfo]);
 
-    /**
-     * 统计卡片数据
-     */
     const statsCards = [
         {
             icon: <Wallet className="text-blue-600" />,
             label: "质押金额",
-            value: `${userInfo?.stakedAmount.toFixed(2) ?? '0'} USDC`
+            value: `${userInfo?.stakedAmount?.toFixed(2) || '0'} USDC`
         },
         {
             icon: <Award className="text-green-600" />,
             label: "用户等级",
-            value: `V${userInfo?.level ?? 0}`,
-            tooltip: `团队加速 ${(userInfo?.level ?? 0) * 5}%`
+            value: `V${userInfo?.level || 0}`,
+            tooltip: `团队加速 ${(userInfo?.level || 0) * 5}%`
         },
         {
             icon: <Users className="text-purple-600" />,
             label: "推荐人数",
-            value: `${userInfo?.directReferrals ?? 0}/${userInfo?.indirectReferrals ?? 0}`,
+            value: `${userInfo?.directReferrals || 0}/${userInfo?.indirectReferrals || 0}`,
             tooltip: "直推/间推人数"
         },
         {
             icon: <TrendingUp className="text-orange-600" />,
             label: "团队业绩",
-            value: `${userInfo?.teamPerformance?.toFixed(2) ?? '0'} USDC`
+            value: `${userInfo?.teamPerformance?.toFixed(2) || '0'} USDC`
         }
     ];
 
@@ -172,7 +144,7 @@ const StakingDapp = () => {
                 {!connected ? (
                     <AuthSection
                         onConnectWallet={handleConnectWallet}
-                        loading={loading || walletConnecting}
+                        loading={loading || connecting}
                     />
                 ) : (
                     <motion.div
@@ -180,14 +152,12 @@ const StakingDapp = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        {/* 顶部统计卡片 */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                             {statsCards.map((card, index) => (
                                 <StatsCard key={index} {...card} />
                             ))}
                         </div>
 
-                        {/* 质押面板 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div className="bg-gray-50 p-6 rounded-lg">
                                 <h3 className="text-lg font-semibold mb-4">创建质押包</h3>
@@ -223,7 +193,6 @@ const StakingDapp = () => {
                                 </div>
                             </div>
 
-                            {/* 奖励面板 */}
                             <RewardsPanel
                                 userInfo={userInfo}
                                 loading={loading}
@@ -231,11 +200,10 @@ const StakingDapp = () => {
                             />
                         </div>
 
-                        {/* 活跃质押包列表 */}
                         {packages.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-lg font-semibold mb-4">我的质押包</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {packages.map((pkg) => (
                                         <StakingPackage
                                             key={pkg.owner}
@@ -247,10 +215,7 @@ const StakingDapp = () => {
                             </div>
                         )}
 
-                        {/* 推荐面板 */}
                         <ReferralPanel userInfo={userInfo} />
-
-                        {/* 等级指南 */}
                         <LevelGuide userInfo={userInfo} />
                     </motion.div>
                 )}

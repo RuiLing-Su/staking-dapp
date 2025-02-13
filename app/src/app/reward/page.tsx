@@ -24,22 +24,22 @@ const RewardPage = () => {
 
   return (
     <motion.div
+      className="space-y-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {connected ? (
-        <div>
-          <h2 className="text-2xl font-bold mb-4">奖励信息</h2>
+        <section>
+          <h2 className="text-2xl font-bold text-center mb-6">奖励信息</h2>
           <RewardsPanel
             userInfo={userInfo}
             loading={loading}
             onClaim={() => handleClaim('PACKAGE_ID_PLACEHOLDER')}
           />
-          {/* 如有多个质押包可循环展示多个奖励面板 */}
-        </div>
+        </section>
       ) : (
-        <p>请先连接钱包</p>
+        <p className="text-center text-xl text-gray-700">请先连接钱包</p>
       )}
     </motion.div>
   );

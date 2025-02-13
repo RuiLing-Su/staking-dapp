@@ -17,22 +17,22 @@ if (token) {
 
 export const authApi = {
     login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-        const response = await api.post('/login', credentials);
+        const response = await api.post('/register', credentials);
         // 保存 access token 到 localStorage
-        if (response.data.tokens.access) {
-            localStorage.setItem('access', response.data.tokens.access);
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
-        }
+        // if (response.data.tokens.access) {
+        //     localStorage.setItem('access', response.data.tokens.access);
+        //     api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+        // }
         return response.data;
     },
 
     register: async (credentials: RegisterCredentials): Promise<LoginResponse> => {
         const response = await api.post('/register', credentials);
         // 保存 access token 到 localStorage
-        if (response.data.tokens.access) {
-            localStorage.setItem('access', response.data.tokens.access);
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
-        }
+        // if (response.data.tokens.access) {
+        //     localStorage.setItem('access', response.data.tokens.access);
+        //     api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+        // }
         return response.data;
     },
 

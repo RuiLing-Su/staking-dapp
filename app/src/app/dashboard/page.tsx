@@ -8,10 +8,12 @@ import ReferralPanel from '@/components/ReferralPanel';
 import LevelGuide from '@/components/LevelGuide';
 import { useWallet } from '@/lib/hooks/useWallet';
 import { useStaking } from '@/lib/hooks/useStaking';
+import { useUser } from '@/lib/context/UserContext';
 
 const Dashboard = () => {
   const { client, connected, connecting: walletConnecting } = useWallet();
   const { userInfo, refreshUserInfo } = useStaking();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -50,18 +52,27 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="space-y-8"
     >
-      {/* 若未完成注册或未连接钱包则显示注册/登录区域 */}
-      <AuthSection onConnectWallet={() => {}} loading={loading || walletConnecting} />
+      {/* 注册/登录区域 */}
+      <section className="py-8">
+        <AuthSection onConnectWallet={() => {}} loading={loading || walletConnecting} />
+      </section>
       {connected && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-8">
-            {statsCards.map((card, index) => (
-              <StatsCard key={index} {...card} />
-            ))}
-          </div>
-          <ReferralPanel userInfo={userInfo} />
-          <LevelGuide userInfo={userInfo} />
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {statsCards.map((card, index) => (
+                <StatsCard key={index} {...card} />
+              ))}
+            </div>
+          </section>
+          <section>
+            <ReferralPanel userInfo={userInfo} />
+          </section>
+          <section>
+            <LevelGuide userInfo={userInfo} />
+          </section>
         </>
       )}
     </motion.div>
