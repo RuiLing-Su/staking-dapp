@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { AuthContext } from '@/lib/context/AuthContext.tsx';
 import { authApi } from '../../api/auth';
-import { LoginCredentials, RegisterCredentials } from '@/types';
+import { LoginCredentials, RegisterCredentials } from '@/types/authTypes';
 
 export const useAuth = () => {
     // 使用 React 的 useContext 钩子来获取 AuthContext 中存储的状态和方法。
@@ -12,25 +12,27 @@ export const useAuth = () => {
     }
 
     const { state, login, logout, setLoading, setError } = context;
-
-    const handleLogin = async (credentials: LoginCredentials) => {
-        try {
-            setLoading(true);
-            const user = await authApi.login(credentials);
-            login(user);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : '登录失败');
-            throw error;
-        } finally {
-            setLoading(false);
-        }
-    };
+    //
+    // const handleLogin = async (credentials: LoginCredentials) => {
+    //     try {
+    //         setLoading(true);
+    //         const user = await authApi.login(credentials);
+    //         login(user);
+    //         return user;
+    //     } catch (error) {
+    //         setError(error instanceof Error ? error.message : '登录失败');
+    //         throw error;
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleRegister = async (credentials: RegisterCredentials) => {
         try {
             setLoading(true);
             const user = await authApi.register(credentials);
             login(user);
+            return user;
         } catch (error) {
             setError(error instanceof Error ? error.message : '注册失败');
             throw error;
@@ -53,7 +55,7 @@ export const useAuth = () => {
 
     return {
         ...state,
-        login: handleLogin,
+        // login: handleLogin,
         register: handleRegister,
         logout: handleLogout,
     };

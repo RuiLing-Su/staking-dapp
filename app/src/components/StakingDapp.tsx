@@ -48,21 +48,18 @@ const StakingDapp = () => {
     /**
      * 处理钱包连接逻辑
      */
-    const handleConnectWallet = async () => {
+    const handleConnectWallet = async (userInfo?: User) => {
         try {
             setLoading(true);
-            // 使用公共函数确保钱包连接
             await connectToPhantomWallet();
-            // 调用 useWallet 提供的 connect 方法
             await connect((window as any).solana);
 
-            // 如果 URL 中存在推荐人参数，注册时传入
             const urlParams = new URLSearchParams(window.location.search);
             const referrer = urlParams.get('ref');
             const referrerPubkey = referrer ? new PublicKey(referrer) : undefined;
 
             if (client) {
-                await initializeStaking(referrerPubkey);
+                await initializeStaking(referrerPubkey, userInfo);
                 showNotification('用户信息初始化成功');
             }
 
@@ -252,7 +249,6 @@ const StakingDapp = () => {
 
                         {/* 推荐面板 */}
                         <ReferralPanel userInfo={userInfo} />
-                        <ReferralSystem/>
 
                         {/* 等级指南 */}
                         <LevelGuide userInfo={userInfo} />

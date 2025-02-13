@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/lib/context/AuthContext';
 import { WalletProvider } from "@/lib/hooks/useWallet";
+import { UserProvider } from "@/lib/context/UserContext";
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,7 +21,9 @@ export default function RootLayout({
             <body className={inter.className}>
                 <AuthProvider>
                     <WalletProvider>
-                        {children}
+                        <UserProvider>
+                            {children}
+                        </UserProvider>
                     </WalletProvider>
                 </AuthProvider>
             </body>

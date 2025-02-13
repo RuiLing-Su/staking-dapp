@@ -1,19 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import { motion } from 'framer-motion';
-import { User, Wallet } from 'lucide-react';
-import { connectToPhantomWallet } from '@/utils/wallet';
+import {motion} from 'framer-motion';
+import {User, Wallet} from 'lucide-react';
+import {connectToPhantomWallet} from '@/utils/wallet';
 
 interface RegisterFormProps {
-    onSubmit: (nickname: string, walletAddress: string, inviteCode?: string) => void;
-    onSwitchToLogin: () => void;
+    onSubmit: (nickname: string, walletAddress: string, inviteCode?: string, avatar?: string) => void;
     loading?: boolean;
 }
 
-const RegisterForm = ({ onSubmit, onSwitchToLogin, loading }: RegisterFormProps) => {
+const RegisterForm = ({ onSubmit, loading }: RegisterFormProps) => {
     const [nickname, setNickname] = useState('');
     const [inviteCode, setInviteCode] = useState('');
     const [walletAddress, setWalletAddress] = useState('');
     const [isInviteCodeReadOnly, setIsInviteCodeReadOnly] = useState(false);
+    const defaultAvatar = '/human.png';
 
     // 如果 URL 中存在推荐人参数，注册时传入
     useEffect(() => {
@@ -39,14 +39,11 @@ const RegisterForm = ({ onSubmit, onSwitchToLogin, loading }: RegisterFormProps)
 
     // 表单的提交处理函数
     const handleSubmit = (e: React.FormEvent) => {
-        // 组织默认的表单提交行为
         e.preventDefault();
-
         if (!walletAddress) {
-            alert('请先连接钱包');
             return;
         }
-        onSubmit(nickname, walletAddress, inviteCode);
+        onSubmit(nickname, walletAddress, inviteCode, defaultAvatar);
     };
 
     return (
@@ -56,7 +53,7 @@ const RegisterForm = ({ onSubmit, onSwitchToLogin, loading }: RegisterFormProps)
             exit={{ opacity: 0, y: -20 }}
             className="w-full max-w-md mx-auto"
         >
-            <h2 className="text-2xl font-bold text-center mb-6">注册</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">登录/注册</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">昵称</label>
@@ -116,19 +113,8 @@ const RegisterForm = ({ onSubmit, onSwitchToLogin, loading }: RegisterFormProps)
                         ${loading || !walletAddress || !nickname ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}
                         transition-colors duration-200`}
                 >
-                    {loading ? '注册中...' : '完成注册'}
+                    {loading ? '登录中...' : '完成登录'}
                 </button>
-
-                <p className="text-center text-sm text-gray-600">
-                    已有账号？
-                    <button
-                        type="button"
-                        onClick={onSwitchToLogin}
-                        className="text-blue-600 hover:text-blue-700 ml-1"
-                    >
-                        立即登录
-                    </button>
-                </p>
             </form>
         </motion.div>
     );

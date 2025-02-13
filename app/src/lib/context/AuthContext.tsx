@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useReducer, useContext } from 'react';
-import { AuthState, User } from '@/types';
+import { AuthState, User } from '@/types/authTypes.js';
 
 // 管理用户认证状态
 interface AuthContext {

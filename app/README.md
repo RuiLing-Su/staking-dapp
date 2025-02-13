@@ -47,7 +47,7 @@ staking-dapp/
 │   │   ├── lib/
 │   │   │   ├── api/
 │   │   │   │   ├── auth.ts          # 认证相关API
-│   │   │   │   └── index.ts         # API配置和类型
+│   │   │   │   └── authTypes.ts         # API配置和类型
 │   │   │   │
 │   │   │   ├── context/
 │   │   │   │   └── AuthContext.ts   # 认证上下文
@@ -60,7 +60,7 @@ staking-dapp/
 │   │   │   └── config.ts            # 全局配置
 │   │   │
 │   │   ├── types/
-│   │   │   └── index.ts             # 全局类型定义
+│   │   │   └── authTypes.ts             # 全局类型定义
 │   │   │
 │   │   └── utils/                   # 工具函数
 │   │       ├── format.ts            # 格式化工具
