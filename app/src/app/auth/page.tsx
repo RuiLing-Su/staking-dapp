@@ -9,8 +9,8 @@ import { authApi } from "@/api/auth";
 
 /**
  * AuthPage：登录/注册页面  
- * - 挂载时检查 localStorage 中的 token 是否存在且有效，有效时跳转到主页面  
- * - 注册成功后跳转到主页面  
+ * - 页面挂载时检查 localStorage 中的 token 是否存在且有效，若有效直接跳转到主页面  
+ * - 注册成功后先校验 token，再跳转到主页面  
  */
 export default function AuthPage() {
   const { user, setUser } = useUser();
@@ -51,8 +51,14 @@ export default function AuthPage() {
         invite_code: inviteCode,
         avatar,
       });
-      setUser(response.account);
-      router.push("/");
+      // 注册成功后，再校验 token 是否有效
+      const valid = await authApi.validateToken();
+      if (valid) {
+        setUser(response.account);
+        router.push("/");
+      } else {
+        console.error("token 无效，无法跳转到主页面");
+      }
     } catch (error) {
       console.error("注册失败:", error);
     } finally {

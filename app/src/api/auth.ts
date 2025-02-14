@@ -47,6 +47,32 @@ export const authApi = {
         const response = await api.get('/me');
         return response.data;
     },
+
+    // 修改后的：验证 token 是否有效
+    validateToken: async (): Promise<boolean> => {
+        try {
+            const response = await api.get('/validate-token');
+            // 根据返回的 message 字段判断 token 是否有效
+            return response.data.message === "Token 有效";
+        } catch (error) {
+            console.error('Token 校验错误:', error);
+            return false;
+        }
+    },
+
+    // 新增：获取等级升级接口信息，返回数据格式如下：
+    // {
+    //   "from_level": "V1",
+    //   "to_level": "V2",
+    //   "required_count": 3,
+    //   "required_referral_level": "V1",
+    //   "team_acceleration": "10.00",
+    //   "shareholder_dividend": "0.00"
+    // }
+    getLevelUpgradeInfo: async (): Promise<any> => {
+        const response = await api.get('/levelinfo');
+        return response.data;
+    },
 };
 
 // 在请求失败时刷新 token 的逻辑

@@ -11,16 +11,14 @@ export enum PackageStatus {
 
 /** 质押包接口，对应 IDL 中 StakingPackage 结构体 */
 export interface StakingPackage {
-    id: PublicKey;
-    owner: PublicKey;
-    amount: BN;
-    baseRelease: BN;
-    acceleratedRelease: BN;
-    currentTotal: BN;
-    maxTotal: BN;
-    createdAt: BN;
-    /** 状态字段，原来的 isActive 修改为 status */
-    status: PackageStatus;
+    id: number;
+    product_name: string;
+    purchase_amount: string;
+    total_released: string;
+    max_release_amount: string;
+    progress_percent: number;
+    status: number;
+    created_at: string;
 }
 
 /** 用户角色枚举，对应 IDL 中 UserRole */

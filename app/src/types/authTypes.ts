@@ -14,6 +14,7 @@ export interface User {
     invite_code: string;
     direct_invite_total: number;
     indirect_invite_total: number;
+    level: string;
 }
 
 export interface LoginResponse {

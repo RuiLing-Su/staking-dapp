@@ -4,13 +4,13 @@ import { Share2 } from "lucide-react";
 /**
  * 推荐面板组件
  * @param {Object} props
- * @param {Object} props.userInfo - 用户信息对象
+ * @param {Object} props.user - 登录成功后返回的用户信息对象，需包含 invite_code 属性
  */
-const ReferralPanel = ({ userInfo }) => {
+const ReferralPanel = ({ user }: { user: { invite_code: string } | null }) => {
     const [copied, setCopied] = useState(false);
+    console.log(user?.invite_code);
 
-    // 如果 userInfo 为空，显示加载状态
-    if (!userInfo) {
+    if (!user || !user.invite_code) {
         return (
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
                 <div className="flex items-center space-x-2 mb-4">
@@ -22,7 +22,8 @@ const ReferralPanel = ({ userInfo }) => {
         );
     }
 
-    const referralLink = `https://solana.com/ref/${userInfo.referralCode}`;
+    // 使用返回的 invite_code 字段生成推荐链接
+    const referralLink = `https://stakingdapp.com/?code=${user.invite_code}`;
 
     const handleCopy = async () => {
         try {

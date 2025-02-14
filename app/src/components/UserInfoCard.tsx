@@ -48,6 +48,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userInfo }) => {
                 <p>邀请码：{userInfo.invite_code}</p>
                 <p>直推总数：{userInfo.direct_invite_total}</p>
                 <p>间推总数：{userInfo.indirect_invite_total}</p>
+                <p>等级：{userInfo.level}</p>
             </div>
         </div>
     );

@@ -8,7 +8,7 @@ const AuthSection = ({ onConnectWallet, loading: externalLoading }) => {
     const [loading, setLoading] = useState(false);
     const { user, setUser } = useUser();
 
-    const handleSubmit = async (nickname, walletAddress, inviteCode, avatar) => {
+    const handleSubmit = async (nickname: string, walletAddress: string, inviteCode?: string, avatar?: string) => {
         setLoading(true);
         try {
             const response = await authApi.register({
@@ -19,7 +19,7 @@ const AuthSection = ({ onConnectWallet, loading: externalLoading }) => {
             });
             setUser(response.account);
         } catch (error) {
-            console.error('注册/登录失败:', error);
+            console.error('登录失败:', error);
         } finally {
             setLoading(false);
         }
@@ -28,7 +28,6 @@ const AuthSection = ({ onConnectWallet, loading: externalLoading }) => {
     const handleProceed = async () => {
         if (user) {
             await onConnectWallet(user);
-            setUser(null);
         }
     };
 
@@ -51,7 +50,7 @@ const AuthSection = ({ onConnectWallet, loading: externalLoading }) => {
                             欢迎来到StakingDapp
                         </h2>
                         <p className="text-gray-600">
-                            您尚未完成注册/登录
+                            您尚未完成登录
                         </p>
                     </div>
                     <RegisterForm

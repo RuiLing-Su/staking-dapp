@@ -12,6 +12,7 @@ export const useAuth = () => {
     }
 
     const { state, login, logout, setLoading, setError } = context;
+    
     //
     // const handleLogin = async (credentials: LoginCredentials) => {
     //     try {
