@@ -9,7 +9,6 @@ export enum PackageStatus {
     Withdrawn = 'Withdrawn'
 }
 
-/** 质押包接口，对应 IDL 中 StakingPackage 结构体 */
 export interface StakingPackage {
     id: number;
     product_name: string;
