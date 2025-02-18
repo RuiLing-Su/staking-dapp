@@ -43,11 +43,11 @@ export default function TokenDetailPage({ params }: { params: { id: string } }) 
   }, [params.id]);
 
   const getSwapRoute = async (inAmount: string) => {
-    if (!memeToken?.memeAddress || !user?.wallet_address) return null;
+    if (!memeToken?.contract_address || !user?.wallet_address) return null;
 
     const params = new URLSearchParams({
       token_in_address: SOL_TOKEN_ADDRESS,        // 输入代币地址
-      token_out_address: memeToken.memeAddress,   // 输出代币地址
+      token_out_address: memeToken.contract_address,   // 输出代币地址
       in_amount: inAmount,                        // 输入代币数量
       from_address: user.wallet_address,          // 用户钱包地址
       slippage: '0.5'                             // 滑点容忍度
@@ -64,7 +64,7 @@ export default function TokenDetailPage({ params }: { params: { id: string } }) 
   };
 
   const submitSwap = async (route: any) => {
-    if (!memeToken?.memeAddress || !user?.wallet_address) return null;
+    if (!memeToken?.contract_address || !user?.wallet_address) return null;
 
     const response = await fetch(GMGN_API.submitSwap, {
       method: 'POST',
@@ -75,7 +75,7 @@ export default function TokenDetailPage({ params }: { params: { id: string } }) 
         from_address: user.wallet_address,        // 用户钱包地址
         to_address: user.wallet_address,          // 接收代币地址
         token_in_address: SOL_TOKEN_ADDRESS,      // 输入代币地址
-        token_out_address: memeToken.memeAddress, // 输出代币地址
+        token_out_address: memeToken.contract_address, // 输出代币地址
         in_amount: amount,                        // 输入代币数量
         slippage: '0.5',                          // 滑点容忍度
         route
@@ -127,9 +127,9 @@ export default function TokenDetailPage({ params }: { params: { id: string } }) 
   };
 
   const memeDetail = () => {
-    const { memeAddress } = memeToken || {};
-    if (memeAddress) {
-      window.open(`https://www.gmgn.cc/kline/sol/${memeAddress}`, '_blank');
+    const { contract_address } = memeToken || {};
+    if (contract_address) {
+      window.open(`https://www.gmgn.cc/kline/sol/${contract_address}`, '_blank');
     } else {
       console.error('代币地址未定义');
     }

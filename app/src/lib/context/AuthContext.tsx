@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useReducer, useContext } from 'react';
-import { AuthState, User } from '@/types/authTypes.js';
+import { createContext, useReducer, useEffect } from 'react';
+import { AuthState, User } from '@/types/authTypes';
+import { authApi } from '@/api/auth';
 
 // 管理用户认证状态
 interface AuthContext {
@@ -15,7 +16,7 @@ interface AuthContext {
 const initialState: AuthState = {
     user: null,
     isAuthenticated: false,
-    loading: false,
+    loading: true,
     error: null,
 };
 
@@ -25,7 +26,8 @@ type AuthAction =
     | { type: 'LOGIN'; payload: User }
     | { type: 'LOGOUT' }
     | { type: 'SET_LOADING'; payload: boolean }
-    | { type: 'SET_ERROR'; payload: string | null };
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'SET_AUTH_STATUS'; payload: boolean };
 
 /**
  * 一个 reducer 函数，用于处理不同的认证操作
@@ -58,6 +60,12 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
                 ...state,
                 error: action.payload,
             };
+        case 'SET_AUTH_STATUS':
+            return {
+                ...state,
+                isAuthenticated: action.payload,
+                loading: false,
+            };
         default:
             return state;
     }
@@ -69,13 +77,28 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
  * @constructor
  */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    const [state, dispatch] = useReducer(authReducer, initialState);
 
-    // 从 localStorage 获取 token,判断是否登录
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access') : null;
-    const [state, dispatch] = useReducer(authReducer, {
-        ...initialState,
-        isAuthenticated: !!token,
-    });
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                if (typeof window !== 'undefined') {
+                    const token = localStorage.getItem('access');
+                    if (token) {
+                        const isValid = await authApi.validateToken();
+                        dispatch({ type: 'SET_AUTH_STATUS', payload: isValid });
+                    } else {
+                        dispatch({ type: 'SET_AUTH_STATUS', payload: false });
+                    }
+                }
+            } catch (error) {
+                console.error('认证检查失败:', error);
+                dispatch({ type: 'SET_AUTH_STATUS', payload: false });
+            }
+        };
+
+        checkAuth();
+    }, []);
 
     const login = (user: User) => dispatch({ type: 'LOGIN', payload: user });
     const logout = () => {

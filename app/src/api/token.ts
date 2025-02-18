@@ -6,7 +6,7 @@ export interface MemeToken {
     symbol: string;
     description: string;
     image: string;
-    memeAddress: string;
+    contract_address: string;
 }
 
 const api = axios.create({
