@@ -3,6 +3,7 @@ import { AuthProvider } from '@/lib/context/AuthContext';
 import { WalletProvider } from "@/lib/hooks/useWallet";
 import { UserProvider } from "@/lib/context/UserContext";
 import './globals.css';
+import AuthRouteGuard from '@/components/AuthRouteGuard';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,7 +23,9 @@ export default function RootLayout({
                 <AuthProvider>
                     <WalletProvider>
                         <UserProvider>
-                            {children}
+                            <AuthRouteGuard>
+                                {children}
+                            </AuthRouteGuard>
                         </UserProvider>
                     </WalletProvider>
                 </AuthProvider>

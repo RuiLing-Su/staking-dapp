@@ -1,6 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {AlertCircle} from "lucide-react";
+import { AlertCircle } from "lucide-react";
+
+interface NotificationProps {
+  message: string;
+  type: 'error' | 'success'; // 根据实际场景调整，比如仅支持 'error' 和 'success'
+  onClose: () => void;
+}
 
 /**
  * 通知组件
@@ -9,7 +15,7 @@ import {AlertCircle} from "lucide-react";
  * @param onClose
  * @constructor
  */
-const Notification = ({ message, type, onClose }) => (
+const Notification: React.FC<NotificationProps> = ({ message, type, onClose }) => (
     <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}

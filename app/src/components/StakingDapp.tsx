@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Users, Award, TrendingUp, Wallet } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence as RawAnimatePresence } from 'framer-motion';
 import { PublicKey } from "@solana/web3.js";
 import { useRouter } from 'next/navigation';
 import { useWallet } from "@/lib/hooks/useWallet";
@@ -13,17 +13,25 @@ import StatsCard from "@/components/StatsCard";
 import StakingPackage from "@/components/StakingPackage";
 import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
-import ReferralSystem from "@/components/ReferralSystem";
 import UserInfoCard from '@/components/UserInfoCard';
 import { useUser } from '@/lib/context/UserContext';
 import { authApi } from '@/api/auth';
 import '@/app/globals.css';
-import { connectToPhantomWallet } from '@/utils/wallet';
+import Link from 'next/link';
+import { User } from '@/types/authTypes';
 
 interface Notification {
     message: string;
     type: 'success' | 'error';
 }
+
+interface Reward {
+    sol: number;
+    meme: number;
+}
+
+// 类型断言：将 AnimatePresence 转换为 React.FC，其 children 为 React.ReactNode
+const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: React.ReactNode }>;
 
 const StakingDapp = () => {
     // 从钱包上下文中获取状态和连接方法
@@ -32,15 +40,13 @@ const StakingDapp = () => {
     const {
         loading: stakingLoading,
         error: stakingError,
-        userInfo,
         packages,
-        initializeStaking,
         createStake,
         exitPackage,
-        refreshUserInfo
+        refreshPackages
     } = useStaking();
     // 从用户上下文中获取登录成功后的用户信息
-    const { user, login } = useUser();
+    const { user} = useUser();
     // 本地状态：loading、通知信息、输入的质押金额、等级升级信息
     const [notification, setNotification] = useState<Notification | null>(null);
     const [stakeAmount, setStakeAmount] = useState('');
@@ -84,7 +90,7 @@ const StakingDapp = () => {
     }, [user]);
 
     // 显示通知函数，3秒后自动关闭通知
-    const showNotification = (message: string, type = 'success') => {
+    const showNotification = (message: string, type: "success" | "error" = "success") => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
     };
@@ -155,12 +161,12 @@ const StakingDapp = () => {
         }
     };
 
-    // 监听钱包连接状态变化，自动刷新用户信息
-    useEffect(() => {
-        if (connected && client) {
-            refreshUserInfo();
+    // 新增包装函数 handleClaimRewards，不需要参数
+    const handleClaimRewards = () => {
+        if (packages.length > 0) {
+            handleExitPackage(packages[0].id.toString());
         }
-    }, [connected, client]);
+    };
 
     /**
      * 统计卡片数据，其中第二个卡片展示用户等级及升级详情（通过等级接口获取）
@@ -169,12 +175,12 @@ const StakingDapp = () => {
         {
             icon: <Wallet className="text-blue-600" />,
             label: "质押金额",
-            value: `${userInfo?.stakedAmount?.toFixed(2) ?? '0'} USDC`
+            value: `${user?.total_principal ?? '0'} USDC`
         },
         {
             icon: <Award className="text-green-600" />,
             label: "用户等级",
-            value: `V${userInfo?.level ?? 0}`,
+            value: `${user?.level ?? 0}`,
             tooltip: levelUpgrade.length > 0
                 ? `从 ${levelUpgrade[0].from_level} 升至 ${levelUpgrade[0].to_level}，需 ${levelUpgrade[0].required_count} 个 ${levelUpgrade[0].required_referral_level}；团队加速 ${levelUpgrade[0].team_acceleration}% ，全球分红 ${levelUpgrade[0].shareholder_dividend}%`
                 : ''
@@ -182,13 +188,13 @@ const StakingDapp = () => {
         {
             icon: <Users className="text-purple-600" />,
             label: "推荐人数",
-            value: `${userInfo?.directReferrals ?? 0}/${userInfo?.indirectReferrals ?? 0}`,
+            value: `${user?.direct_invite_total ?? 0}/${user?.indirect_invite_total ?? 0}`,
             tooltip: "直推/间推人数"
         },
         {
             icon: <TrendingUp className="text-orange-600" />,
             label: "团队业绩",
-            value: `${userInfo?.teamPerformance?.toFixed(2) ?? '0'} USDC`
+            value: `${user?.teamPerformance ?? '0'} USDC`
         }
     ];
 
@@ -208,15 +214,6 @@ const StakingDapp = () => {
             {user ? (
                 <div className="mb-6">
                     <UserInfoCard userInfo={user} />
-                    <button
-                        onClick={handleConnectWallet}
-                        disabled={loading}
-                        className={`mt-4 py-2 px-4 rounded ${
-                            loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                    >
-                        {loading ? "处理中..." : "连接钱包"}
-                    </button>
                 </div>
             ) : (
                 // 如果无用户信息，则显示登录/注册组件
@@ -275,9 +272,18 @@ const StakingDapp = () => {
 
                         {/* 奖励面板 */}
                         <RewardsPanel
-                            userInfo={userInfo}
+                            userInfo={user ? {
+                                pendingRewards: {
+                                    sol: parseFloat(user.withdrawable_earnings) || 0,
+                                    meme: 0
+                                },
+                                total_earnings: {
+                                    sol: parseFloat(user.total_earnings) || 0,
+                                    meme: 0
+                                }
+                            } : undefined}
                             loading={loading}
-                            onClaim={handleExitPackage}
+                            onClaim={handleClaimRewards}
                         />
                     </div>
 
@@ -288,9 +294,8 @@ const StakingDapp = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {packages.map((pkg) => (
                                     <StakingPackage
-                                        key={pkg.owner}
                                         pkg={pkg}
-                                        onExit={handleExitPackage}
+                                        onExit={() => handleExitPackage(pkg.id.toString())}
                                     />
                                 ))}
                             </div>
@@ -302,6 +307,12 @@ const StakingDapp = () => {
 
                     {/* 等级指南，新传入接口返回的数组数据 */}
                     <LevelGuide userInfo={user} levels={levelUpgrade || []} />
+
+                    <div className="mb-8 text-center">
+                        <Link href="/token" className="text-blue-500 hover:underline">
+                            查看代币列表
+                        </Link>
+                    </div>
                 </motion.div>
             )}
         </div>

@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import RegisterForm from "@/components/Auth/RegisterForm";
 import { useUser } from "@/lib/context/UserContext";
-import { useAuth } from "@/lib/hooks/useAuth";
+import useAuth from "@/lib/hooks/useAuth";
 import { authApi } from "@/api/auth";
+import {RegisterCredentials} from "@/types/authTypes";
 
 /**
  * AuthPage：登录/注册页面  
@@ -37,30 +38,23 @@ export default function AuthPage() {
   }, [router]);
 
   // 注册（或登录）接口（登录和注册使用同一接口）
-  const handleRegister = async (
-    nickname: string,
-    walletAddress: string,
-    inviteCode?: string,
-    avatar?: string
-  ) => {
-    setLoading(true);
+  const handleRegister = async (nickname: string, walletAddress: string, inviteCode?: string, avatar?: string) => {
     try {
-      const response = await register({
-        nickname,
-        wallet_address: walletAddress,
-        invite_code: inviteCode,
-        avatar,
-      });
-      // 注册成功后，再校验 token 是否有效
-      const valid = await authApi.validateToken();
-      if (valid) {
-        setUser(response.account);
-        router.push("/");
+      setLoading(true);
+      const credentials: RegisterCredentials = { nickname, wallet_address: walletAddress, invite_code: inviteCode, avatar };
+      await register(credentials);
+      // 注册成功后校验token有效性
+      const isValid = await authApi.validateToken();
+      if (isValid) {
+        // Token有效,跳转到主页面  
+        router.push('/');
       } else {
-        console.error("token 无效，无法跳转到主页面");
+        // Token无效,提示错误
+        alert('注册成功,但登录失败,请重新登录');
       }
     } catch (error) {
-      console.error("注册失败:", error);
+      console.error('注册失败:', error);
+      alert('注册失败,请重试');
     } finally {
       setLoading(false);
     }
@@ -73,7 +67,7 @@ export default function AuthPage() {
       ) : (
         <>
           <h2 className="text-2xl font-bold">欢迎登录/注册</h2>
-          <RegisterForm onSubmit={handleRegister} loading={loading} onSwitchToLogin={() => {}} />
+          <RegisterForm onSubmit={handleRegister} loading={loading} />
         </>
       )}
     </div>

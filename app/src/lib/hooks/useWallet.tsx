@@ -129,19 +129,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
 
             // 加载质押程序
-            const program = new Program(
-                Idl,
-                programId,
-                provider
-            );
+            const program = new Program(Idl as any, programId, provider);
             console.log('Program loaded successfully');
 
             // 创建 StakingClient 实例
-            const client = new StakingClient(
-                program,
-                connection,
-                phantomWallet
-            );
+            const token = typeof window !== 'undefined' ? localStorage.getItem('access') : null;
+            const client = new StakingClient(token);
             console.log('Staking client created');
 
             // 更新状态

@@ -3,6 +3,31 @@
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, TrendingUp } from 'lucide-react';
 
+interface ReferralUserProps {
+  // 定义 user 对象的类型
+  user: {
+    address: string;
+    stakingAmount: number;
+  };
+  level: number;
+  isIndirect: boolean;
+}
+
+interface Referral {
+  address: string;
+  stakingAmount: number;
+  joinTime: Date;
+  level: number;
+  performance: number;
+  referredBy?: string;
+}
+
+interface UserReferrals {
+  directReferrals: Referral[];
+  indirectReferrals: Referral[];
+  teamPerformance: number;
+}
+
 /**
  * 推荐用户数据（模拟）
  * @param user
@@ -10,7 +35,7 @@ import { Users, UserPlus, TrendingUp } from 'lucide-react';
  * @param isIndirect
  * @constructor
  */
-const ReferralUser = ({ user, level, isIndirect }) => (
+const ReferralUser: React.FC<ReferralUserProps> = ({ user, level, isIndirect }) => (
   <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-3">
@@ -38,7 +63,7 @@ const ReferralUser = ({ user, level, isIndirect }) => (
 
 // 推荐系统主组件
 const ReferralSystem = () => {
-  const [userReferrals, setUserReferrals] = useState({
+  const [userReferrals, setUserReferrals] = useState<UserReferrals>({
     directReferrals: [],
     indirectReferrals: [],
     teamPerformance: 0,
@@ -50,7 +75,7 @@ const ReferralSystem = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // 模拟直推用户数据
-    const mockDirectReferrals = [
+    const mockDirectReferrals: Referral[] = [
       {
         address: '0x1234567890abcdef1234567890abcdef12345678',
         stakingAmount: 1000,
@@ -68,7 +93,7 @@ const ReferralSystem = () => {
     ];
 
     // 模拟间推用户数据
-    const mockIndirectReferrals = [
+    const mockIndirectReferrals: Referral[] = [
       {
         address: '0x9876543210fedcba9876543210fedcba98765432',
         stakingAmount: 500,
@@ -110,9 +135,10 @@ const ReferralSystem = () => {
     totalDirects: userReferrals.directReferrals.length,
     totalIndirects: userReferrals.indirectReferrals.length,
     avgStaking: Math.round(
-      [...userReferrals.directReferrals, ...userReferrals.indirectReferrals]
-        .reduce((sum, user) => sum + user.stakingAmount, 0) /
-      (userReferrals.directReferrals.length + userReferrals.indirectReferrals.length) || 0
+      (
+        [...userReferrals.directReferrals, ...userReferrals.indirectReferrals]
+          .reduce((sum, user) => sum + user.stakingAmount, 0) || 0
+      ) / (userReferrals.directReferrals.length + userReferrals.indirectReferrals.length)
     ),
   };
 

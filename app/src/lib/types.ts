@@ -29,22 +29,6 @@ export enum UserRole {
     Admin = 'Admin'
 }
 
-/** 用户信息接口，对应 IDL 中 UserInfo 结构体 */
-export interface UserInfo {
-    user: PublicKey;
-    referrer: PublicKey;
-    stakedAmount: BN;
-    rewardsClaimed: BN;
-    lastClaimTime: BN;
-    directReferrals: number; // u32 类型
-    indirectReferrals: number; // u32 类型
-    level: number; // u8 类型
-    teamPerformance: BN;
-    isActive: boolean;
-    packagesCount: BN; // u64 类型
-    role: UserRole;
-}
-
 export interface WalletState {
     wallet: any;
     connection: Connection | null;

@@ -20,8 +20,6 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userInfo }) => {
                 当前用户信息
             </h3>
             <div className="space-y-3 text-gray-700 text-sm">
-                <p>昵称：{userInfo.nickname}</p>
-
                 {/* ✅ 钱包地址：居中 + 可复制 + 展开/隐藏 */}
                 <div className="flex flex-col items-center text-center">
                     <p className="font-medium">钱包地址：</p>
@@ -39,16 +37,12 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ userInfo }) => {
                         </button>
                     </div>
                 </div>
-
+                <p>昵称：{userInfo.nickname}</p>
                 <p>总本金：{userInfo.total_principal} USDC</p>
                 <p>可提取收益：{userInfo.withdrawable_earnings} USDC</p>
                 <p>仅限购币收益：{userInfo.purchase_only_earnings} USDC</p>
                 <p>总收益：{userInfo.total_earnings} USDC</p>
                 <p>状态：{userInfo.status_display}</p>
-                <p>邀请码：{userInfo.invite_code}</p>
-                <p>直推总数：{userInfo.direct_invite_total}</p>
-                <p>间推总数：{userInfo.indirect_invite_total}</p>
-                <p>等级：{userInfo.level}</p>
             </div>
         </div>
     );

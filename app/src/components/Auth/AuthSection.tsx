@@ -3,8 +3,14 @@ import { useUser } from '@/lib/context/UserContext';
 import UserInfoCard from '@/components/UserInfoCard';
 import RegisterForm from './RegisterForm';
 import { authApi } from '@/api/auth';
+import { User } from '@/types/authTypes';
 
-const AuthSection = ({ onConnectWallet, loading: externalLoading }) => {
+interface AuthSectionProps {
+    onConnectWallet: (user: User) => Promise<void> | void;
+    loading: boolean;
+}
+
+const AuthSection: React.FC<AuthSectionProps> = ({ onConnectWallet, loading: externalLoading }) => {
     const [loading, setLoading] = useState(false);
     const { user, setUser } = useUser();
 

@@ -70,11 +70,18 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
  */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
-    // 使用 useReducer 钩子来管理 AuthState ,并通过 authReducer 更新状态
-    const [state, dispatch] = useReducer(authReducer, initialState);
+    // 从 localStorage 获取 token,判断是否登录
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access') : null;
+    const [state, dispatch] = useReducer(authReducer, {
+        ...initialState,
+        isAuthenticated: !!token,
+    });
 
     const login = (user: User) => dispatch({ type: 'LOGIN', payload: user });
-    const logout = () => dispatch({ type: 'LOGOUT' });
+    const logout = () => {
+        localStorage.removeItem('access');
+        dispatch({ type: 'LOGOUT' });
+    };
     const setLoading = (loading: boolean) => dispatch({ type: 'SET_LOADING', payload: loading });
     const setError = (error: string | null) => dispatch({ type: 'SET_ERROR', payload: error });
 

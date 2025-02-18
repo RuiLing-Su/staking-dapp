@@ -1,39 +1,24 @@
+"use client";
 import { useContext } from 'react';
-import { AuthContext } from '@/lib/context/AuthContext.tsx';
-import { authApi } from '../../api/auth';
+import { AuthContext } from '@/lib/context/AuthContext';
+import { authApi } from '@/api/auth';
 import { LoginCredentials, RegisterCredentials } from '@/types/authTypes';
 
-export const useAuth = () => {
-    // 使用 React 的 useContext 钩子来获取 AuthContext 中存储的状态和方法。
-    // AuthContext 是在应用中提供认证相关状态的上下文。
+const useAuth = () => {
     const context = useContext(AuthContext);
+
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
 
     const { state, login, logout, setLoading, setError } = context;
-    
-    //
-    // const handleLogin = async (credentials: LoginCredentials) => {
-    //     try {
-    //         setLoading(true);
-    //         const user = await authApi.login(credentials);
-    //         login(user);
-    //         return user;
-    //     } catch (error) {
-    //         setError(error instanceof Error ? error.message : '登录失败');
-    //         throw error;
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const handleRegister = async (credentials: RegisterCredentials) => {
         try {
             setLoading(true);
-            const user = await authApi.register(credentials);
-            login(user);
-            return user;
+            const response = await authApi.register(credentials);
+            login(response.account);
+            return response.account;
         } catch (error) {
             setError(error instanceof Error ? error.message : '注册失败');
             throw error;
@@ -42,22 +27,31 @@ export const useAuth = () => {
         }
     };
 
-    const handleLogout = async () => {
+    const validateAuth = async () => {
         try {
-            setLoading(true);
-            await authApi.logout();
-            logout();
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('access');
+                if (token) {
+                    return await authApi.validateToken();
+                }
+            }
+            return false;
         } catch (error) {
-            setError(error instanceof Error ? error.message : '退出失败');
-        } finally {
-            setLoading(false);
+            console.error('认证检查失败:', error);
+            return false;
         }
     };
 
     return {
         ...state,
-        // login: handleLogin,
+        isAuthenticated: state.isAuthenticated,
+        loading: state.loading,
+        user: state.user,
+        login,
+        logout,
         register: handleRegister,
-        logout: handleLogout,
+        validateAuth,
     };
 };
+
+export default useAuth;

@@ -8,7 +8,7 @@ import React from 'react';
  * @param tooltip
  * @constructor
  */
-const StatsCard = ({ icon, label, value, tooltip }) => (
+const StatsCard = ({ icon, label, value, tooltip }: { icon: any; label: string; value: string; tooltip?: any; }) => (
     <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center space-x-2">
             {icon}

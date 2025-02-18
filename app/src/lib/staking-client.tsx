@@ -18,7 +18,10 @@ export class StakingClient {
    * 构造函数可接受传入的 token（优先使用传入的值）
    */
   constructor(token?: string | null) {
-    const authToken = token || localStorage.getItem('access');
+    let authToken = token;
+    if (!authToken && typeof window !== 'undefined') {
+      authToken = localStorage.getItem('access');
+    }
     if (authToken) {
       this.api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
     } else {

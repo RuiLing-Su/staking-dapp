@@ -1,16 +1,33 @@
 import React from 'react';
 
+interface Reward {
+  sol: number;
+  meme: number;
+}
+
+interface RewardsUserInfo {
+  pendingRewards?: Reward;
+  total_earnings?: Reward;
+  // 可根据需要添加其他字段
+}
+
+interface RewardsPanelProps {
+  userInfo?: RewardsUserInfo;
+  loading: boolean;
+  onClaim: () => void;
+}
+
 /**
  * 奖励信息面板组件
- * @param userInfo
- * @param loading
- * @param onClaim
+ * @param userInfo 用户的信息对象
+ * @param loading 是否加载中
+ * @param onClaim 领取奖励的回调函数
  * @constructor
  */
-const RewardsPanel = ({ userInfo, loading, onClaim }) => {
+const RewardsPanel: React.FC<RewardsPanelProps> = ({ userInfo, loading, onClaim }) => {
     // 添加默认值处理
-    const pendingRewards = userInfo?.pendingRewards || { sol: 0, meme: 0 };
-    const totalRewards = userInfo?.totalRewards || { sol: 0, meme: 0 };
+    const pendingRewards: Reward = userInfo?.pendingRewards || { sol: 0, meme: 0 };
+    const totalRewards: Reward = userInfo?.total_earnings || { sol: 0, meme: 0 };
 
     return (
         <div className="bg-gray-50 p-6 rounded-lg">

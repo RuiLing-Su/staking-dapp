@@ -15,7 +15,7 @@ const LoginForm = ({ onSubmit, onSwitchToRegister, loading }: LoginFormProps) =>
   const handleConnectWallet = async () => {
     try {
       const walletAddress = await connectToPhantomWallet();
-      onSubmit({ wallet_address: walletAddress });
+      onSubmit({ nickname: "", wallet_address: walletAddress });
     } catch (error) {
       console.error("连接钱包失败:", error);
       throw error;

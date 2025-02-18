@@ -9,17 +9,11 @@ const api = axios.create({
     },
 });
 
-// 从 localStorage 中获取 token 并设置默认 header
-const token = localStorage.getItem('access');
-if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
-
 export const authApi = {
     login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
         const response = await api.post('/login', credentials);
-        // 保存 access token 到 localStorage
-        if (response.data.tokens.access) {
+        // 保存 access token 到 localStorage（仅客户端环境下执行）
+        if (response.data.tokens.access && typeof window !== 'undefined') {
             localStorage.setItem('access', response.data.tokens.access);
             api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
         }
@@ -28,8 +22,8 @@ export const authApi = {
 
     register: async (credentials: RegisterCredentials): Promise<LoginResponse> => {
         const response = await api.post('/register', credentials);
-        // 保存 access token 到 localStorage
-        if (response.data.tokens.access) {
+        // 保存 access token 到 localStorage（仅客户端环境下执行）
+        if (response.data.tokens.access && typeof window !== 'undefined') {
             localStorage.setItem('access', response.data.tokens.access);
             api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
         }
@@ -37,14 +31,16 @@ export const authApi = {
     },
 
     logout: async (): Promise<void> => {
-        localStorage.removeItem('access');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('access');
+        }
         delete api.defaults.headers.common['Authorization'];
         await api.post('/logout');
     },
 
     // 获取当前用户信息
     getCurrentUser: async (): Promise<LoginResponse> => {
-        const response = await api.get('/me');
+        const response = await api.get('/userinfo');
         return response.data;
     },
 
@@ -82,15 +78,17 @@ api.interceptors.response.use(
         const originalRequest = error.config;
         if (error.response.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-            const refreshToken = localStorage.getItem('refresh');
-            if (refreshToken) {
-                const response = await api.post('/refresh', { token: refreshToken });
-                if (response.data.tokens.access) {
-                    localStorage.setItem('access', response.data.tokens.access);
-                    api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
-                    originalRequest.headers['Authorization'] = `Bearer ${response.data.tokens.access}`;
-                    return api(originalRequest);
-                }
+            if (typeof window !== 'undefined') {
+              const refreshToken = localStorage.getItem('refresh');
+              if (refreshToken) {
+                  const response = await api.post('/refresh', { token: refreshToken });
+                  if (response.data.tokens.access) {
+                      localStorage.setItem('access', response.data.tokens.access);
+                      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+                      originalRequest.headers['Authorization'] = `Bearer ${response.data.tokens.access}`;
+                      return api(originalRequest);
+                  }
+              }
             }
         }
         return Promise.reject(error);
