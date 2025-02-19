@@ -35,9 +35,9 @@ staking-dapp/
 │   │   │   ├── ReferralSystem.tsx    # 推荐系统组件
 │   │   │   └── WalletConnect.tsx     # 钱包连接组件
 │   │   ├── lib/
-│   │   │   ├── staking-client.tsx     # 合约交互
+│   │   │   ├── staking.ts     # 合约交互
 │   │   │   ├── config.ts             # 配置文件
-│   │   │   ├── types.ts              # 类型定义
+│   │   │   ├── walletTypes.ts              # 类型定义
 │   │   │   ├── useStaking.tsx        # 管理质押相关的状态和操作
 │   │   │   └── useWallet.tsx         # 管理钱包连接状态
 │   │   └── app/

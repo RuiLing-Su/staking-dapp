@@ -18,6 +18,7 @@ import { authApi } from '@/api/auth';
 import '@/app/globals.css';
 import Link from 'next/link';
 import { User } from '@/types/authTypes';
+import { stakingApi } from '@/api/staking';
 
 interface Notification {
     message: string;
@@ -174,10 +175,19 @@ const StakingDapp = () => {
         }
     };
 
-    // 新增包装函数 handleClaimRewards，无需参数
-    const handleClaimRewards = async () => {
-        if (packages.length > 0) {
-            await handleExitPackage(packages[0].id.toString());
+    // 修改处理提现的函数
+    const handleClaimRewards = async (amount: number) => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            await stakingApi.requestWithdraw(amount);
+            showNotification("提现申请已提交");
+            await refreshUser();
+        } catch (error: any) {
+            console.error("提现失败:", error);
+            showNotification(error.message, "error");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -294,7 +304,7 @@ const StakingDapp = () => {
                     </div>
 
                     {/* 奖励面板 */}
-                    <RewardsPanel user={user} loading={loading} onClaim={handleClaimRewards} />
+                    <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
                 </div>
 
                 {/* 活跃质押包列表 */}

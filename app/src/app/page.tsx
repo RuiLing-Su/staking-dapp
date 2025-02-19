@@ -51,7 +51,7 @@ export default function Home() {
                             height={48}
                             className="rounded-full hover:scale-105 transition-transform duration-300"
                         />
-                        <h1 className="text-2xl font-bold text-gray-800">Solana Staking DApp</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">SolEdge</h1>
                     </div>
                     <nav className="hidden md:flex items-center gap-6">
                         <a

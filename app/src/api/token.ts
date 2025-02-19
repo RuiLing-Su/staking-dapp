@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { createApiClient } from './baseApi';
 
 export interface MemeToken {
     id: number;
@@ -9,23 +9,7 @@ export interface MemeToken {
     contract_address: string;
 }
 
-const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// 添加请求拦截器，在客户端环境下添加 token
-api.interceptors.request.use((config) => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('access');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-    }
-    return config;
-});
+const api = createApiClient();
 
 export const tokenApi = {
     getTokenList: async (): Promise<MemeToken[]> => {
@@ -36,5 +20,5 @@ export const tokenApi = {
     getTokenDetail: async (id: number): Promise<MemeToken> => {
         const response = await api.get(`/tokens/${id}`);
         return response.data;
-    }
+    },
 }; 
