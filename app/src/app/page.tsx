@@ -5,9 +5,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import './globals.css';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { CONFIG } from '@/lib/config';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import useAuth from '@/lib/hooks/useAuth';
 
 // 动态导入 StakingDapp 组件
@@ -23,29 +21,21 @@ const StakingDapp = dynamic(
     }
 );
 
-// 将 PhantomWalletAdapter 的初始化移到组件内部
 export default function Home() {
     const { isAuthenticated } = useAuth();
-    const router = useRouter();
     const [mounted, setMounted] = useState(false);
 
-    React.useEffect(() => {
-        if (!isAuthenticated) {
-            router.push('/auth');
-        }
-    }, [isAuthenticated, router]);
-
-    // 确保只在客户端初始化钱包
-    React.useEffect(() => {
+    // 只在客户端初始化钱包适配器
+    useEffect(() => {
         if (typeof window !== 'undefined') {
             new PhantomWalletAdapter();
             setMounted(true);
         }
     }, []);
 
-    // 在客户端挂载前不渲染内容
-    if (!mounted) {
-        return null;
+    // 如果尚未挂载或认证尚未完成，则只显示加载状态
+    if (!mounted || !isAuthenticated) {
+        return <div>加载中...</div>;
     }
 
     return (
@@ -81,12 +71,24 @@ export default function Home() {
                             Documentation
                         </a>
                     </nav>
-                    <nav>
-                        <Link href="/token">代币购买</Link>
+                    <nav className="flex items-center gap-4">
+                        <Link 
+                            href="/recharge" 
+                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
+                        >
+                            充值
+                        </Link>
+                        <Link 
+                            href="/token" 
+                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
+                        >
+                            代币购买
+                        </Link>
                     </nav>
                 </header>
 
-                {isAuthenticated && <StakingDapp />}
+                {/* 直接渲染主页面内容，避免重复重定向 */}
+                <StakingDapp />
 
                 {/* 页脚 */}
                 <footer className="mt-16 text-center text-gray-500 text-sm">

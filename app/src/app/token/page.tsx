@@ -69,6 +69,13 @@ export default function TokenListPage() {
             />
           ) : null}
         </AnimatePresence>
+        
+        {/* 新增：返回主页链接 */}
+        <div className="mt-8 text-center">
+          <Link href="/" className="text-blue-600 hover:underline">
+            返回主页
+          </Link>
+        </div>
       </div>
     </div>
   );

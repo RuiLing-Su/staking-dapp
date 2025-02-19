@@ -6,7 +6,6 @@ import { PublicKey } from "@solana/web3.js";
 import { useRouter } from 'next/navigation';
 import { useWallet } from "@/lib/hooks/useWallet";
 import { useStaking } from '@/lib/hooks/useStaking';
-import AuthSection from "@/components/Auth/AuthSection";
 import ReferralPanel from "@/components/ReferralPanel";
 import RewardsPanel from "@/components/RewardsPanel";
 import StatsCard from "@/components/StatsCard";
@@ -212,6 +211,23 @@ const StakingDapp = () => {
         }
     ];
 
+    // 如果用户未登录，显示登录提示
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="mb-4 text-lg font-bold">您尚未登录</p>
+                    <Link
+                        href="/auth"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                        前往登录/注册
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto p-4">
             <AnimatePresence>
@@ -225,98 +241,90 @@ const StakingDapp = () => {
             </AnimatePresence>
 
             {/* 顶部用户信息与钱包连接 */}
-            {user ? (
-                <div className="mb-6">
-                    <UserInfoCard userInfo={user} />
+            <div className="mb-6">
+                <UserInfoCard userInfo={user} />
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                {/* 顶部统计卡片 */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    {statsCards.map((card, index) => (
+                        <StatsCard key={index} {...card} />
+                    ))}
                 </div>
-            ) : (
-                // 如果无用户信息，则显示登录/注册组件
-                <AuthSection onConnectWallet={handleConnectWallet} loading={loading} />
-            )}
 
-            {/* 主内容部分：仅当已登录时展示 */}
-            {user && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    {/* 顶部统计卡片 */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        {statsCards.map((card, index) => (
-                            <StatsCard key={index} {...card} />
-                        ))}
-                    </div>
-
-                    {/* 质押面板 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-gray-50 p-6 rounded-lg">
-                            <h3 className="text-lg font-semibold mb-4">创建质押包</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        输入质押金额
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="100"
-                                        step="100"
-                                        value={stakeAmount}
-                                        onChange={(e) => setStakeAmount(e.target.value)}
-                                        placeholder="最低质押 100 USDC"
-                                        className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500"
-                                    />
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        每日收益率: 3‰, 1.5倍出局
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleStake}
-                                    disabled={loading || !stakeAmount || Number(stakeAmount) < 100}
-                                    className={`w-full py-2 rounded-lg transition-colors duration-200 ${
-                                        loading || !stakeAmount || Number(stakeAmount) < 100
-                                            ? 'bg-gray-400 cursor-not-allowed'
-                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                    }`}
-                                >
-                                    {loading ? '创建中...' : '创建质押包'}
-                                </button>
+                {/* 质押面板 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-4">创建质押包</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    输入质押金额
+                                </label>
+                                <input
+                                    type="number"
+                                    min="100"
+                                    step="100"
+                                    value={stakeAmount}
+                                    onChange={(e) => setStakeAmount(e.target.value)}
+                                    placeholder="最低质押 100 USDC"
+                                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500"
+                                />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    每日收益率: 3‰, 1.5倍出局
+                                </p>
                             </div>
+                            <button
+                                onClick={handleStake}
+                                disabled={loading || !stakeAmount || Number(stakeAmount) < 100}
+                                className={`w-full py-2 rounded-lg transition-colors duration-200 ${
+                                    loading || !stakeAmount || Number(stakeAmount) < 100
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                }`}
+                            >
+                                {loading ? '创建中...' : '创建质押包'}
+                            </button>
                         </div>
-
-                        {/* 奖励面板 */}
-                        <RewardsPanel user={user} loading={loading} onClaim={handleClaimRewards} />
                     </div>
 
-                    {/* 活跃质押包列表 */}
-                    {packages.length > 0 && (
-                        <div className="mb-8">
-                            <h3 className="text-lg font-semibold mb-4">我的质押包</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {packages.map((pkg) => (
-                                    <StakingPackage
-                                        key={pkg.id}
-                                        pkg={pkg}
-                                        onExit={() => handleExitPackage(pkg.id.toString())}
-                                    />
-                                ))}
-                            </div>
+                    {/* 奖励面板 */}
+                    <RewardsPanel user={user} loading={loading} onClaim={handleClaimRewards} />
+                </div>
+
+                {/* 活跃质押包列表 */}
+                {packages.length > 0 && (
+                    <div className="mb-8">
+                        <h3 className="text-lg font-semibold mb-4">我的质押包</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {packages.map((pkg) => (
+                                <StakingPackage
+                                    key={pkg.id}
+                                    pkg={pkg}
+                                    onExit={() => handleExitPackage(pkg.id.toString())}
+                                />
+                            ))}
                         </div>
-                    )}
-
-                    {/* 推荐面板，传入登录成功返回的用户信息 */}
-                    <ReferralPanel user={user} />
-
-                    {/* 等级指南，新传入接口返回的数组数据 */}
-                    <LevelGuide userInfo={user} levels={levelUpgrade || []} />
-
-                    <div className="mb-8 text-center">
-                        <Link href="/token" className="text-blue-500 hover:underline">
-                            查看代币列表
-                        </Link>
                     </div>
-                </motion.div>
-            )}
+                )}
+
+                {/* 推荐面板，传入登录成功返回的用户信息 */}
+                <ReferralPanel user={user} />
+
+                {/* 等级指南，新传入接口返回的数组数据 */}
+                <LevelGuide userInfo={user} levels={levelUpgrade || []} />
+
+                <div className="mb-8 text-center">
+                    <Link href="/token" className="text-blue-500 hover:underline">
+                        查看代币列表
+                    </Link>
+                </div>
+            </motion.div>
         </div>
     );
 };
