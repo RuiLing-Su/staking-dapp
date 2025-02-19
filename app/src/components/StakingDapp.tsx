@@ -35,8 +35,7 @@ const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: R
 
 const StakingDapp = () => {
     // 从钱包上下文中获取状态和连接方法
-    const { client, connected, connecting: walletConnecting, connect } = useWallet();
-    // 从质押 Hook 中获取相关操作和状态
+// 从质押 Hook 中获取相关操作和状态
     const {
         loading: stakingLoading,
         error: stakingError,
