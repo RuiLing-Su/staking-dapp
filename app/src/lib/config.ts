@@ -1,6 +1,6 @@
 export const CONFIG = {
 
-    API_URL: 'http://192.168.1.104:8000/api',
+    API_URL: 'https://app.sol-edge.cc:8000/api',
     PROGRAM_ID: process.env.NEXT_PUBLIC_PROGRAM_ID!,
     RPC_ENDPOINT: process.env.NEXT_PUBLIC_RPC_ENDPOINT!,
     COMMITMENT: 'confirmed' as const,

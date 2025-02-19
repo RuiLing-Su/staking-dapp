@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import './globals.css';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 import Link from 'next/link';
 import useAuth from '@/lib/hooks/useAuth';
+import { useWallet } from '@/lib/hooks/useWallet';
 
 // 动态导入 StakingDapp 组件
 const StakingDapp = dynamic(
@@ -23,15 +23,32 @@ const StakingDapp = dynamic(
 
 export default function Home() {
     const { isAuthenticated } = useAuth();
+    const { connected, walletAddress, connect, disconnect, handleAccountChanged } = useWallet();
     const [mounted, setMounted] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // 只在客户端初始化钱包适配器
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            new PhantomWalletAdapter();
             setMounted(true);
+            // // 尝试自动连接钱包
+            // connect(true).catch((error) => {
+            //     console.error("自动连接钱包失败:", error);
+            // });
         }
-    }, []);
+    }, [connect]);
+
+    const handleConnect = async () => {
+        try {
+            if (!connected) {
+                await connect();
+            }
+            setMenuOpen(true); 
+        } catch (error) {
+            console.error("连接钱包失败:", error);
+            alert("连接钱包失败，请检查是否安装了 Phantom 钱包");
+        }
+    };
 
     // 如果尚未挂载或认证尚未完成，则只显示加载状态
     if (!mounted || !isAuthenticated) {
@@ -51,26 +68,8 @@ export default function Home() {
                             height={48}
                             className="rounded-full hover:scale-105 transition-transform duration-300"
                         />
-                        <h1 className="text-2xl font-bold text-gray-800">Solana Staking DApp</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">SolEdge</h1>
                     </div>
-                    <nav className="hidden md:flex items-center gap-6">
-                        <a
-                            href="https://solana.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            Solana Explorer
-                        </a>
-                        <a
-                            href="https://docs.solana.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            Documentation
-                        </a>
-                    </nav>
                     <nav className="flex items-center gap-4">
                         <Link 
                             href="/recharge" 
@@ -84,6 +83,50 @@ export default function Home() {
                         >
                             代币购买
                         </Link>
+                        <div className="relative">
+                            <button
+                                onClick={handleConnect}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-full"
+                            >
+                                {connected ? (
+                                    <>
+                                        <Image 
+                                            src="/phantomIcon.png"
+                                            alt="phantomIcon"
+                                            width={24} 
+                                            height={24} 
+                                        />
+                                        <span>{walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : '连接钱包'}</span>
+                                    </>
+                                ) : (
+                                    '连接钱包'
+                                )}
+                            </button>
+                            
+                            {connected && menuOpen && (
+                                <div className="absolute right-0 mt-2 w-39 bg-black text-white rounded-md shadow-lg py-1">
+                                    <button onClick={() => {
+                                        navigator.clipboard.writeText(walletAddress || '');
+                                        alert("钱包地址已复制");
+                                        setMenuOpen(false);
+                                    }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
+                                        Copy address
+                                    </button>
+                                    <button onClick={async () => {
+                                        await handleAccountChanged(null);
+                                        setMenuOpen(false);
+                                    }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
+                                        Change wallet
+                                    </button>
+                                    <button onClick={async () => {
+                                        await disconnect();
+                                        setMenuOpen(false);
+                                    }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
+                                        Disconnect
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </header>
 

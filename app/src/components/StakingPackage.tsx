@@ -4,10 +4,10 @@ interface StakingPackageProps {
   pkg: {
     id: number | string;
     product_name: string;
-    purchase_amount: string;
-    total_released: string;
+    purchase_amount: number | string;
+    total_released: number | string;
     max_release_amount: string;
-    progress_percent: number | string;
+    progress_percent: number;
     status: number;
     created_at: string;
   };
@@ -36,11 +36,11 @@ const StakingPackage = ({ pkg, onExit }: StakingPackageProps) => {
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">已释放</span>
-          <span className="font-medium">{totalReleased.toFixed(3)} SOL</span>
+          <span className="font-medium">{totalReleased.toFixed(3)} U</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">目标释放</span>
-          <span className="font-medium">{maxReleaseAmount.toFixed(3)} SOL</span>
+          <span className="font-medium">{maxReleaseAmount.toFixed(3)} U</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">进度</span>

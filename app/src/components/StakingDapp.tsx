@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Award, TrendingUp, Wallet } from 'lucide-react';
 import { motion, AnimatePresence as RawAnimatePresence } from 'framer-motion';
-import { PublicKey } from "@solana/web3.js";
 import { useRouter } from 'next/navigation';
-import { useWallet } from "@/lib/hooks/useWallet";
 import { useStaking } from '@/lib/hooks/useStaking';
 import ReferralPanel from "@/components/ReferralPanel";
 import RewardsPanel from "@/components/RewardsPanel";
@@ -12,30 +10,22 @@ import StatsCard from "@/components/StatsCard";
 import StakingPackage from "@/components/StakingPackage";
 import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
-import UserInfoCard from '@/components/UserInfoCard';
 import { useUser } from '@/lib/context/UserContext';
 import { authApi } from '@/api/auth';
 import '@/app/globals.css';
 import Link from 'next/link';
-import { User } from '@/types/authTypes';
+import { stakingApi } from '@/api/staking';
 
 interface Notification {
     message: string;
     type: 'success' | 'error';
 }
-
-interface Reward {
-    sol: number;
-    meme: number;
-}
-
 // 类型断言：将 AnimatePresence 转换为 React.FC，其 children 为 React.ReactNode
 const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: React.ReactNode }>;
 
 const StakingDapp = () => {
     // 从钱包上下文中获取状态和连接方法
-    const { client, connected, connecting: walletConnecting, connect } = useWallet();
-    // 从质押 Hook 中获取相关操作和状态
+// 从质押 Hook 中获取相关操作和状态
     const {
         loading: stakingLoading,
         error: stakingError,
@@ -107,27 +97,6 @@ const StakingDapp = () => {
     };
 
     /**
-     * 连接钱包逻辑（改为链下逻辑，不再调用原链上钱包连接接口）
-     */
-    const handleConnectWallet = async () => {
-        if (!user) {
-            router.push("/auth");
-            return;
-        }
-        try {
-            setLoading(true);
-            // 如后续需要调用初始化操作，可在此处调用链下对应接口（已带 token）
-            // 此处示意直接认为钱包已连接
-            showNotification("钱包连接成功");
-        } catch (error: any) {
-            console.error("连接钱包失败:", error);
-            showNotification(error.message, "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    /**
      * 处理质押逻辑
      */
     const handleStake = async () => {
@@ -174,10 +143,19 @@ const StakingDapp = () => {
         }
     };
 
-    // 新增包装函数 handleClaimRewards，无需参数
-    const handleClaimRewards = async () => {
-        if (packages.length > 0) {
-            await handleExitPackage(packages[0].id.toString());
+    // 修改处理提现的函数
+    const handleClaimRewards = async (amount: number) => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            await stakingApi.requestWithdraw(amount);
+            showNotification("提现申请已提交");
+            await refreshUser();
+        } catch (error: any) {
+            console.error("提现失败:", error);
+            showNotification(error.message, "error");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -240,11 +218,6 @@ const StakingDapp = () => {
                 )}
             </AnimatePresence>
 
-            {/* 顶部用户信息与钱包连接 */}
-            <div className="mb-6">
-                <UserInfoCard userInfo={user} />
-            </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -294,7 +267,7 @@ const StakingDapp = () => {
                     </div>
 
                     {/* 奖励面板 */}
-                    <RewardsPanel user={user} loading={loading} onClaim={handleClaimRewards} />
+                    <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
                 </div>
 
                 {/* 活跃质押包列表 */}

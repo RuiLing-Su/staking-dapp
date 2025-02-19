@@ -1,7 +1,7 @@
 export const connectToPhantomWallet = async (): Promise<string> => {
   const phantomWallet = (window as any).solana;
   if (!phantomWallet) {
-    throw new Error('请先安装 Phantom 钱包');
+    window.open('https://phantom.app/','_blank');
   }
   if (!phantomWallet.isConnected) {
     await phantomWallet.connect();

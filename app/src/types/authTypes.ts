@@ -8,6 +8,7 @@ export interface User {
     total_principal: string;
     withdrawable_earnings: string;
     purchase_only_earnings: string;
+    withdrawn_earnings:string;
     total_earnings: string;
     status: number;
     status_display: string;
