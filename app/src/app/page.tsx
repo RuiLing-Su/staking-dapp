@@ -53,24 +53,6 @@ export default function Home() {
                         />
                         <h1 className="text-2xl font-bold text-gray-800">SolEdge</h1>
                     </div>
-                    <nav className="hidden md:flex items-center gap-6">
-                        <a
-                            href="https://solana.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            Solana Explorer
-                        </a>
-                        <a
-                            href="https://docs.solana.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            Documentation
-                        </a>
-                    </nav>
                     <nav className="flex items-center gap-4">
                         <Link 
                             href="/recharge" 

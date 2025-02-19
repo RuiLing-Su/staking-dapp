@@ -24,12 +24,6 @@ interface Notification {
     message: string;
     type: 'success' | 'error';
 }
-
-interface Reward {
-    sol: number;
-    meme: number;
-}
-
 // 类型断言：将 AnimatePresence 转换为 React.FC，其 children 为 React.ReactNode
 const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: React.ReactNode }>;
 
@@ -248,11 +242,6 @@ const StakingDapp = () => {
                     />
                 )}
             </AnimatePresence>
-
-            {/* 顶部用户信息与钱包连接 */}
-            <div className="mb-6">
-                <UserInfoCard userInfo={user} />
-            </div>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
