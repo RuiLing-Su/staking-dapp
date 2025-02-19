@@ -8,6 +8,7 @@ export interface WalletState {
 }
 
 export interface WalletContextState extends WalletState {
-    connect: () => Promise<void>;
-    disconnect: () => void;
+    connect: (onlyIfTrusted?: boolean) => Promise<void>;
+    disconnect: () => Promise<void>;
+    handleAccountChanged: (publicKey: any) => Promise<void>;
 }

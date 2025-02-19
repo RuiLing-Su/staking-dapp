@@ -138,7 +138,7 @@ export default function TokenDetailClient({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="p-4 flex justify-center items-center">
-        加载中...
+        <div className="loader">加载中...</div>
       </div>
     );
   }
@@ -162,7 +162,7 @@ export default function TokenDetailClient({ id }: { id: string }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto my-4 p-4 border rounded-lg shadow-sm">
+    <div className="max-w-2xl mx-auto my-4 p-4 border rounded-lg shadow-sm bg-white">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-2">{memeToken.name}</h1>

@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Award, TrendingUp, Wallet } from 'lucide-react';
 import { motion, AnimatePresence as RawAnimatePresence } from 'framer-motion';
-import { PublicKey } from "@solana/web3.js";
 import { useRouter } from 'next/navigation';
-import { useWallet } from "@/lib/hooks/useWallet";
 import { useStaking } from '@/lib/hooks/useStaking';
 import ReferralPanel from "@/components/ReferralPanel";
 import RewardsPanel from "@/components/RewardsPanel";
@@ -12,12 +10,10 @@ import StatsCard from "@/components/StatsCard";
 import StakingPackage from "@/components/StakingPackage";
 import LevelGuide from "@/components/LevelGuide";
 import Notifications from "@/components/Notification";
-import UserInfoCard from '@/components/UserInfoCard';
 import { useUser } from '@/lib/context/UserContext';
 import { authApi } from '@/api/auth';
 import '@/app/globals.css';
 import Link from 'next/link';
-import { User } from '@/types/authTypes';
 import { stakingApi } from '@/api/staking';
 
 interface Notification {
@@ -98,27 +94,6 @@ const StakingDapp = () => {
     const showNotification = (message: string, type: "success" | "error" = "success") => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
-    };
-
-    /**
-     * 连接钱包逻辑（改为链下逻辑，不再调用原链上钱包连接接口）
-     */
-    const handleConnectWallet = async () => {
-        if (!user) {
-            router.push("/auth");
-            return;
-        }
-        try {
-            setLoading(true);
-            // 如后续需要调用初始化操作，可在此处调用链下对应接口（已带 token）
-            // 此处示意直接认为钱包已连接
-            showNotification("钱包连接成功");
-        } catch (error: any) {
-            console.error("连接钱包失败:", error);
-            showNotification(error.message, "error");
-        } finally {
-            setLoading(false);
-        }
     };
 
     /**
