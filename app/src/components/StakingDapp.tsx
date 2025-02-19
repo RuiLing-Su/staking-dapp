@@ -45,14 +45,24 @@ const StakingDapp = () => {
         exitPackage,
         refreshPackages
     } = useStaking();
-    // 从用户上下文中获取登录成功后的用户信息
-    const { user} = useUser();
+    // 从用户上下文中获取登录成功后的用户信息及更新方法（用于刷新用户数据）
+    const { user, setUser } = useUser();
     // 本地状态：loading、通知信息、输入的质押金额、等级升级信息
     const [notification, setNotification] = useState<Notification | null>(null);
     const [stakeAmount, setStakeAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [levelUpgrade, setLevelUpgrade] = useState<any[]>([]);
     const router = useRouter();
+
+    // 刷新用户信息函数，从 /userinfo 接口获取最新数据（需传入 token）
+    const refreshUser = async () => {
+        try {
+            const res = await authApi.getCurrentUser();
+            setUser(res.account);
+        } catch (error) {
+            console.error("刷新用户信息失败:", error);
+        }
+    };
 
     // 页面挂载时校验 token 是否存在且有效
     useEffect(() => {
@@ -66,6 +76,8 @@ const StakingDapp = () => {
             .then((valid) => {
                 if (!valid) {
                     router.push("/auth");
+                } else {
+                    refreshUser();
                 }
             })
             .catch((err) => {
@@ -130,11 +142,12 @@ const StakingDapp = () => {
             if (amount < 100) {
                 throw new Error("最低质押金额为 100 USDC");
             }
-            // 将 USDC 金额转换为正确精度（6位小数），转换后直接作为数字传给后端
-            const amountWithDecimals = amount
+            // 将 USDC 金额转换为正确精度（6位小数），转换后直接传给后端
+            const amountWithDecimals = amount;
             await createStake(amountWithDecimals);
             setStakeAmount("");
             showNotification(`成功质押 ${amount} USDC`);
+            await refreshUser();
         } catch (error: any) {
             console.error("质押失败:", error);
             showNotification(error.message, "error");
@@ -145,7 +158,7 @@ const StakingDapp = () => {
 
     /**
      * 处理退出质押包逻辑
-     * @param packageId
+     * @param packageId 质押包标识
      */
     const handleExitPackage = async (packageId: string) => {
         if (!user) return;
@@ -153,6 +166,7 @@ const StakingDapp = () => {
             setLoading(true);
             await exitPackage(packageId);
             showNotification("成功退出质押包并领取奖励");
+            await refreshUser();
         } catch (error: any) {
             console.error("退出失败:", error);
             showNotification(error.message, "error");
@@ -161,10 +175,10 @@ const StakingDapp = () => {
         }
     };
 
-    // 新增包装函数 handleClaimRewards，不需要参数
-    const handleClaimRewards = () => {
+    // 新增包装函数 handleClaimRewards，无需参数
+    const handleClaimRewards = async () => {
         if (packages.length > 0) {
-            handleExitPackage(packages[0].id.toString());
+            await handleExitPackage(packages[0].id.toString());
         }
     };
 
@@ -271,20 +285,7 @@ const StakingDapp = () => {
                         </div>
 
                         {/* 奖励面板 */}
-                        <RewardsPanel
-                            userInfo={user ? {
-                                pendingRewards: {
-                                    sol: parseFloat(user.withdrawable_earnings) || 0,
-                                    meme: 0
-                                },
-                                total_earnings: {
-                                    sol: parseFloat(user.total_earnings) || 0,
-                                    meme: 0
-                                }
-                            } : undefined}
-                            loading={loading}
-                            onClaim={handleClaimRewards}
-                        />
+                        <RewardsPanel user={user} loading={loading} onClaim={handleClaimRewards} />
                     </div>
 
                     {/* 活跃质押包列表 */}
@@ -294,6 +295,7 @@ const StakingDapp = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {packages.map((pkg) => (
                                     <StakingPackage
+                                        key={pkg.id}
                                         pkg={pkg}
                                         onExit={() => handleExitPackage(pkg.id.toString())}
                                     />
