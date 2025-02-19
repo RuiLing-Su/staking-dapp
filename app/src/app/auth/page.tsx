@@ -20,6 +20,11 @@ export default function AuthPage() {
   const { register } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [nickname, setNickname] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+  const [avatar, setAvatar] = useState("/human.png");
 
   // 页面挂载时检测token是否有效
   useEffect(() => {
@@ -40,12 +45,7 @@ export default function AuthPage() {
   }, [router]);
 
   // 登录/注册接口处理函数
-  const handleRegister = async (
-    nickname: string,
-    walletAddress: string,
-    inviteCode?: string,
-    avatar?: string
-  ) => {
+  const handleRegister = async (nickname: string, walletAddress: string, inviteCode: string, avatar: string) => {
     try {
       setLoading(true);
       const credentials: RegisterCredentials = {
@@ -55,6 +55,7 @@ export default function AuthPage() {
         avatar,
       };
       await register(credentials);
+      
       // 注册成功后校验 token 有效性
       const isValid = await authApi.validateToken();
       if (isValid) {
@@ -67,24 +68,19 @@ export default function AuthPage() {
       alert("注册失败,请重试");
     } finally {
       setLoading(false);
+      setModalOpen(false);
     }
   };
 
-  // 内置注册表单组件，合并了原 RegisterForm 的功能
+  // 内置注册表单组件
   const InternalRegisterForm: React.FC<{
-    onSubmit: (
-      nickname: string,
-      walletAddress: string,
-      inviteCode?: string,
-      avatar?: string
-    ) => void;
+    onSubmit: (nickname: string, walletAddress: string, inviteCode: string, avatar: string) => void;
     loading: boolean;
   }> = ({ onSubmit, loading }) => {
     const [nickname, setNickname] = useState("");
     const [inviteCode, setInviteCode] = useState("");
     const [walletAddress, setWalletAddress] = useState("");
     const [isInviteCodeReadOnly, setIsInviteCodeReadOnly] = useState(false);
-    const defaultAvatar = "/human.png";
 
     // 解析 URL 中的邀请码
     useEffect(() => {
@@ -103,7 +99,6 @@ export default function AuthPage() {
         setWalletAddress(address);
       } catch (error) {
         console.error("连接钱包失败:", error);
-        throw error;
       }
     };
 
@@ -113,7 +108,7 @@ export default function AuthPage() {
       if (!walletAddress) {
         return;
       }
-      onSubmit(nickname, walletAddress, inviteCode, defaultAvatar);
+      onSubmit(nickname, walletAddress, inviteCode, avatar);
     };
 
     return (
@@ -176,6 +171,11 @@ export default function AuthPage() {
 
           <button
             type="submit"
+            onClick={() => {
+              if (walletAddress) {
+                handleLogin(); // 调用登录逻辑
+              }
+            }}
             disabled={loading || !walletAddress || !nickname}
             className={`w-full py-2 rounded-lg text-white font-medium
                       ${
@@ -184,10 +184,154 @@ export default function AuthPage() {
                           : "bg-green-600 hover:bg-green-700"
                       } transition-colors duration-200`}
           >
-            {loading ? "登录中..." : "完成登录"}
+            {loading ? "登录中..." : "登录"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)} // 打开弹框
+            className="w-full py-2 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+          >
+            注册
           </button>
         </form>
       </motion.div>
+    );
+  };
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      // 注册成功后校验 token 有效性
+      const isValid = await authApi.validateToken();
+      if (isValid) {
+        router.push("/");
+      } else {
+        alert("注册成功，但登录失败，请重新登录");
+      }
+    } catch (error) {
+      console.error("注册失败:", error);
+      alert("注册失败,请重试");
+    } finally {
+      setLoading(false);
+      setModalOpen(false);
+    }
+  };
+  // 注册对话框组件
+  const RegisterModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    const [nickname, setNickname] = useState("");
+    const [inviteCode, setInviteCode] = useState("");
+    const [walletAddress, setWalletAddress] = useState("");
+    const [avatar, setAvatar] = useState("/human.png"); // 默认头像
+
+    // 连接钱包处理函数
+    const handleConnectWallet = async () => {
+      try {
+        const address = await connectToPhantomWallet();
+        setWalletAddress(address); // 更新钱包地址状态
+      } catch (error) {
+        console.error("连接钱包失败:", error);
+      }
+    };
+
+    const handleRegisterSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleRegister(nickname, walletAddress, inviteCode, avatar); // 传递所有参数
+    };
+
+    return (
+      <div
+        className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+        onClick={(e) => {
+          // 点击弹出框外部时关闭对话框
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className="bg-white p-6 rounded shadow-md w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <h2 className="text-xl font-bold mb-4">注册</h2>
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                昵称
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="请输入昵称"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                头像
+              </label>
+              <input
+                type="text"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="请输入头像 URL"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                邀请码
+              </label>
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="请输入邀请码"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                钱包地址
+              </label>
+              <input
+                type="text"
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="请输入钱包地址"
+                required
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleConnectWallet}
+              className={`w-full py-2 rounded-lg text-white font-medium
+                        ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} transition-colors duration-200`}
+              disabled={loading}
+            >
+              <span>{walletAddress ? "已连接钱包" : "连接钱包"}</span>
+            </button>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="mr-2 text-gray-500"
+                onClick={onClose}
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                className={`py-2 px-4 rounded-lg text-white font-medium ${
+                  loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                }`}
+                disabled={loading}
+              >
+                {loading ? "注册中..." : "注册"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     );
   };
 
@@ -205,6 +349,7 @@ export default function AuthPage() {
           </>
         )}
       </div>
+      {isModalOpen && <RegisterModal onClose={() => setModalOpen(false)} />}
     </div>
   );
 }
