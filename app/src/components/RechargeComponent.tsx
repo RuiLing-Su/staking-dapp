@@ -12,7 +12,7 @@ const RechargeComponent: React.FC<RechargeComponentProps> = ({ userWalletAddress
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const handleRecharge = async () => {
-        if (!window.solana) {
+        if (!((window as any).solana)) {
             alert("请先安装 Phantom 钱包");
             return;
         }
@@ -24,8 +24,8 @@ const RechargeComponent: React.FC<RechargeComponentProps> = ({ userWalletAddress
 
         try {
             setTxLoading(true);
-            await window.solana.connect();
-            const fromPubkey = window.solana.publicKey;
+            await (window as any).solana.connect();
+            const fromPubkey = (window as any).solana.publicKey;
             if (!fromPubkey) {
                 setNotification({ message: "无法获取钱包地址", type: "error" });
                 return;
@@ -45,7 +45,7 @@ const RechargeComponent: React.FC<RechargeComponentProps> = ({ userWalletAddress
             const { blockhash } = await connection.getRecentBlockhash();
             transaction.recentBlockhash = blockhash;
 
-            const signed = await window.solana.signTransaction(transaction);
+            const signed = await (window as any).solana.signTransaction(transaction);
             const txid = await connection.sendRawTransaction(signed.serialize());
             await connection.confirmTransaction(txid, "confirmed");
 
