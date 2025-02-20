@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { createApiClient } from './baseApi';
 
 const api = createApiClient();

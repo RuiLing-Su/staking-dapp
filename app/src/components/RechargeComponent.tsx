@@ -59,7 +59,7 @@ const RechargeComponent: React.FC<RechargeComponentProps> = ({ userWalletAddress
     };
 
     return (
-<div className="bg-white shadow-md rounded-lg p-6 max-w-md mx-auto mt-8">
+        <div className="bg-white shadow rounded-lg p-6 w-full max-w-md space-y-4">
     <h2 className="text-2xl font-semibold mb-4 text-center">SOL 充值操作</h2>
     <input
         type="number"

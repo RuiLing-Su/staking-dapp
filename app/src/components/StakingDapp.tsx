@@ -16,6 +16,12 @@ import '@/app/globals.css';
 import Link from 'next/link';
 import { stakingApi } from '@/api/staking';
 import TokenList from '@/components/TokenList';
+import { useSystemWallet } from '@/lib/hooks/useSystemWallet';
+import RechargeComponent from "@/components/RechargeComponent";
+import WithdrawComponent from "@/components/WithdrawComponent";
+import TokenComponent from "@/components/TokenComponent";
+import { tokenApi, MemeToken } from '@/api/token';
+import { XCircle } from 'lucide-react';
 
 interface Notification {
     message: string;
@@ -35,11 +41,14 @@ const StakingDapp = () => {
         refreshPackages
     } = useStaking();
     const { user, setUser } = useUser();
+    const { systemWallet } = useSystemWallet();
     const [notification, setNotification] = useState<Notification | null>(null);
     const [stakeAmount, setStakeAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [levelUpgrade, setLevelUpgrade] = useState<any[]>([]);
-    const [teamEarnings, setTeamEarnings] = useState<number | null>(null); // 新增团队业绩状态
+    const [teamEarnings, setTeamEarnings] = useState<string | null>(null);
+    const [selectedToken, setSelectedToken] = useState<MemeToken | null>(null);
+    const [showRecharge, setShowRecharge] = useState(false);
     const router = useRouter();
 
     // 刷新用户信息
@@ -89,16 +98,17 @@ const StakingDapp = () => {
     // 获取团队业绩
     useEffect(() => {
         const fetchTeamEarnings = async () => {
-            if (user) {
-                try {
-                    const earnings = await authApi.getTeamEarnings();
-                    setTeamEarnings(earnings.team_earnings); // 假设返回的对象中有 team_earnings 属性
-                } catch (error) {
-                    console.error("获取团队业绩失败", error);
-                }
+            try {
+                const earnings = await authApi.getTeamEarnings();
+                setTeamEarnings(earnings.team_earnings);
+            } catch (error) {
+                console.error("获取团队业绩失败:", error);
             }
         };
-        fetchTeamEarnings();
+
+        if (user) {
+            fetchTeamEarnings();
+        }
     }, [user]);
 
     // 显示通知
@@ -115,6 +125,7 @@ const StakingDapp = () => {
         }
         try {
             setLoading(true);
+            setShowRecharge(true);
             const amount = Number(stakeAmount);
             if (amount < 100) {
                 throw new Error("最低质押金额为 100 USDC");
@@ -187,9 +198,20 @@ const StakingDapp = () => {
         {
             icon: <TrendingUp className="text-orange-600" />,
             label: "团队业绩",
-            value: `${teamEarnings ?? '0'} USDC` // 使用获取的团队业绩
+            value: `${teamEarnings ?? '0'} USDC`
         }
     ];
+
+    // 确保 user 和 systemWallet 都已加载
+    if (!user || !systemWallet) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="mb-4 text-lg font-bold">加载中...</p>
+                </div>
+            </div>
+        );
+    }
 
     // 用户未登录时显示提示
     if (!user) {
@@ -207,6 +229,15 @@ const StakingDapp = () => {
             </div>
         );
     }
+
+    const handleTokenClick = async (tokenId: number) => {
+        try {
+            const tokenDetail = await tokenApi.getTokenDetail(tokenId);
+            setSelectedToken(tokenDetail);
+        } catch (error) {
+            console.error("获取代币详情失败:", error);
+        }
+    };
 
     return (
         <div className="container mx-auto p-4">
@@ -277,7 +308,7 @@ const StakingDapp = () => {
                 </div>
 
                 {/* 代币列表组件 */}
-                <TokenList />
+                <TokenList onTokenClick={handleTokenClick} />
                 {/* 活跃质押包列表 */}
                 {packages.length > 0 && (
                     <div className="mb-8">
@@ -298,6 +329,51 @@ const StakingDapp = () => {
                 <ReferralPanel user={user} />
                 {/* 等级指南 */}
                 <LevelGuide userInfo={user} levels={levelUpgrade || []} />
+
+                {/* 动态显示 TokenComponent */}
+                {selectedToken && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="bg-white p-4 rounded-lg shadow-lg relative">
+                            <button
+                                onClick={() => setSelectedToken(null)}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                            <TokenComponent
+                                userWalletAddress={user.wallet_address}
+                                tokenContractAddress={selectedToken.contract_address}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* 动态显示 RechargeComponent */}
+                {showRecharge && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="bg-white p-4 rounded-lg shadow-lg relative">
+                            <button
+                                onClick={() => setShowRecharge(false)}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                            <RechargeComponent
+                                userWalletAddress={user.wallet_address}
+                                systemWalletAddress={systemWallet.wallet_address}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">
+
+                    <WithdrawComponent
+                        userWalletAddress={user.wallet_address}
+                        systemWalletAddress={systemWallet.wallet_address}
+                    />
+                </div>
+
             </motion.div>
         </div>
     );

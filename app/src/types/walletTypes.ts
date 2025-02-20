@@ -1,5 +1,6 @@
 import { Connection } from '@solana/web3.js';
 
+
 export interface WalletState {
     walletAddress: string | null;
     connected: boolean;

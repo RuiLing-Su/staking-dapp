@@ -1,5 +1,6 @@
 import { LoginCredentials, RegisterCredentials, LoginResponse } from '@/types/authTypes';
 import { createApiClient } from './baseApi';
+import axios from 'axios';
 
 const api = createApiClient();
 
@@ -45,12 +46,19 @@ export const authApi = {
         const response = await api.get('/levelinfo');
         return response.data;
     },
-    getTeamEarnings: async (): Promise<any[]> => {
-        const response = await api.get('/team_earnings');
-        return response.data;
-    },
+
     getinvitations: async (): Promise<any> => {
         const response = await api.get('/invitations');
         return response.data;
+    },
+
+    getTeamEarnings: async () => {
+        try {
+            const response = await api.get('/team-earnings');
+            return response.data;
+        } catch (error) {
+            console.error("获取团队业绩失败:", error);
+            throw error;
+        }
     }
 };

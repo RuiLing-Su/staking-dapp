@@ -16,7 +16,7 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ userWalletAddress
     };
 
     return (
-<div className="bg-white shadow-md rounded-lg p-10 max-w-lg mx-auto mt-8">
+        <div className="bg-white shadow rounded-lg p-6 w-full max-w-md space-y-4">
     <h2 className="text-2xl font-semibold mb-4 text-center">提现操作</h2>
     <input
         type="number"
