@@ -16,13 +16,13 @@ import '@/app/globals.css';
 import Link from 'next/link';
 import { stakingApi } from '@/api/staking';
 import TokenList from '@/components/TokenList';
+import ReferralSystem from '@/components/ReferralSystem';
 
 interface Notification {
     message: string;
     type: 'success' | 'error';
 }
 
-// 类型断言
 const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: React.ReactNode }>;
 
 const StakingDapp = () => {
@@ -39,7 +39,8 @@ const StakingDapp = () => {
     const [stakeAmount, setStakeAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [levelUpgrade, setLevelUpgrade] = useState<any[]>([]);
-    const [teamEarnings, setTeamEarnings] = useState<number | null>(null); // 新增团队业绩状态
+    const [teamEarnings, setTeamEarnings] = useState<number | null>(null);
+    const [referralData, setReferralData] = useState<{ direct: any[], indirect: any[] }>({ direct: [], indirect: [] });
     const router = useRouter();
 
     // 刷新用户信息
@@ -92,7 +93,7 @@ const StakingDapp = () => {
             if (user) {
                 try {
                     const earnings = await authApi.getTeamEarnings();
-                    setTeamEarnings(earnings.team_earnings); // 假设返回的对象中有 team_earnings 属性
+                    setTeamEarnings(earnings.team_earnings);
                 } catch (error) {
                     console.error("获取团队业绩失败", error);
                 }
@@ -100,6 +101,8 @@ const StakingDapp = () => {
         };
         fetchTeamEarnings();
     }, [user]);
+
+    // 获取推荐数据
 
     // 显示通知
     const showNotification = (message: string, type: "success" | "error" = "success") => {
@@ -187,7 +190,7 @@ const StakingDapp = () => {
         {
             icon: <TrendingUp className="text-orange-600" />,
             label: "团队业绩",
-            value: `${teamEarnings ?? '0'} USDC` // 使用获取的团队业绩
+            value: `${teamEarnings ?? '0'} USDC`
         }
     ];
 
@@ -272,7 +275,7 @@ const StakingDapp = () => {
 
                     {/* 奖励面板 */}
                     <div className="bg-white shadow rounded-lg p-6">
-                    <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
+                        <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
                     </div>
                 </div>
 
@@ -294,8 +297,9 @@ const StakingDapp = () => {
                     </div>
                 )}
 
-                {/* 推荐面板 */}
-                <ReferralPanel user={user} />
+                {/* 推荐系统 */}
+                <ReferralSystem referralData={referralData} /> {/* 将数据传递给ReferralSystem */}
+
                 {/* 等级指南 */}
                 <LevelGuide userInfo={user} levels={levelUpgrade || []} />
             </motion.div>

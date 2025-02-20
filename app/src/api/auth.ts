@@ -46,7 +46,7 @@ export const authApi = {
         return response.data;
     },
     getTeamEarnings: async (): Promise<any[]> => {
-        const response = await api.get('/team_earnings');
+        const response = await api.get('/team-earnings');
         return response.data;
     },
     getinvitations: async (): Promise<any> => {
