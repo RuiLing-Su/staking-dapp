@@ -46,4 +46,8 @@ export const authApi = {
         const response = await api.get('/levelinfo');
         return response.data;
     },
+    getTeamEarnings: async (): Promise<any[]> => {
+        const response = await api.get('/team_earnings');
+        return response.data;
+    },
 };

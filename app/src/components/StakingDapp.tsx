@@ -15,17 +15,17 @@ import { authApi } from '@/api/auth';
 import '@/app/globals.css';
 import Link from 'next/link';
 import { stakingApi } from '@/api/staking';
-import TokenList from '@/components/TokenList'; // 引入 TokenList 组件
+import TokenList from '@/components/TokenList';
+
 interface Notification {
     message: string;
     type: 'success' | 'error';
 }
-// 类型断言：将 AnimatePresence 转换为 React.FC，其 children 为 React.ReactNode
+
+// 类型断言
 const AnimatePresence = RawAnimatePresence as unknown as React.FC<{ children?: React.ReactNode }>;
 
 const StakingDapp = () => {
-    // 从钱包上下文中获取状态和连接方法
-// 从质押 Hook 中获取相关操作和状态
     const {
         loading: stakingLoading,
         error: stakingError,
@@ -34,16 +34,15 @@ const StakingDapp = () => {
         exitPackage,
         refreshPackages
     } = useStaking();
-    // 从用户上下文中获取登录成功后的用户信息及更新方法（用于刷新用户数据）
     const { user, setUser } = useUser();
-    // 本地状态：loading、通知信息、输入的质押金额、等级升级信息
     const [notification, setNotification] = useState<Notification | null>(null);
     const [stakeAmount, setStakeAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [levelUpgrade, setLevelUpgrade] = useState<any[]>([]);
+    const [teamEarnings, setTeamEarnings] = useState<number | null>(null); // 新增团队业绩状态
     const router = useRouter();
 
-    // 刷新用户信息函数，从 /userinfo 接口获取最新数据（需传入 token）
+    // 刷新用户信息
     const refreshUser = async () => {
         try {
             const res = await authApi.getCurrentUser();
@@ -53,29 +52,26 @@ const StakingDapp = () => {
         }
     };
 
-    // 页面挂载时校验 token 是否存在且有效
+    // 页面挂载时校验 token
     useEffect(() => {
         const token = localStorage.getItem("access");
         if (!token) {
             router.push("/auth");
             return;
         }
-        authApi
-            .validateToken()
-            .then((valid) => {
-                if (!valid) {
-                    router.push("/auth");
-                } else {
-                    refreshUser();
-                }
-            })
-            .catch((err) => {
-                console.error("token校验错误: ", err);
+        authApi.validateToken().then((valid) => {
+            if (!valid) {
                 router.push("/auth");
-            });
+            } else {
+                refreshUser();
+            }
+        }).catch((err) => {
+            console.error("token校验错误: ", err);
+            router.push("/auth");
+        });
     }, [router]);
 
-    // 获取等级升级信息（接口返回数组）
+    // 获取等级升级信息
     useEffect(() => {
         async function fetchLevelInfo() {
             try {
@@ -90,15 +86,28 @@ const StakingDapp = () => {
         }
     }, [user]);
 
-    // 显示通知函数，3秒后自动关闭通知
+    // 获取团队业绩
+    useEffect(() => {
+        const fetchTeamEarnings = async () => {
+            if (user) {
+                try {
+                    const earnings = await authApi.getTeamEarnings();
+                    setTeamEarnings(earnings.team_earnings); // 假设返回的对象中有 team_earnings 属性
+                } catch (error) {
+                    console.error("获取团队业绩失败", error);
+                }
+            }
+        };
+        fetchTeamEarnings();
+    }, [user]);
+
+    // 显示通知
     const showNotification = (message: string, type: "success" | "error" = "success") => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
     };
 
-    /**
-     * 处理质押逻辑
-     */
+    // 质押逻辑
     const handleStake = async () => {
         if (!user || !stakeAmount) {
             showNotification("请先登录并输入质押金额", "error");
@@ -110,9 +119,7 @@ const StakingDapp = () => {
             if (amount < 100) {
                 throw new Error("最低质押金额为 100 USDC");
             }
-            // 将 USDC 金额转换为正确精度（6位小数），转换后直接传给后端
-            const amountWithDecimals = amount;
-            await createStake(amountWithDecimals);
+            await createStake(amount);
             setStakeAmount("");
             showNotification(`成功质押 ${amount} USDC`);
             await refreshUser();
@@ -124,10 +131,7 @@ const StakingDapp = () => {
         }
     };
 
-    /**
-     * 处理退出质押包逻辑
-     * @param packageId 质押包标识
-     */
+    // 退出质押包逻辑
     const handleExitPackage = async (packageId: string) => {
         if (!user) return;
         try {
@@ -143,7 +147,7 @@ const StakingDapp = () => {
         }
     };
 
-    // 修改处理提现的函数
+    // 提现逻辑
     const handleClaimRewards = async (amount: number) => {
         if (!user) return;
         try {
@@ -159,9 +163,7 @@ const StakingDapp = () => {
         }
     };
 
-    /**
-     * 统计卡片数据，其中第二个卡片展示用户等级及升级详情（通过等级接口获取）
-     */
+    // 统计卡片数据
     const statsCards = [
         {
             icon: <Wallet className="text-blue-600" />,
@@ -171,7 +173,7 @@ const StakingDapp = () => {
         {
             icon: <Award className="text-green-600" />,
             label: "用户等级",
-            value: `${user?.level ?? 0}`,
+            value: `${user?.level ?? ''}`,
             tooltip: levelUpgrade.length > 0
                 ? `从 ${levelUpgrade[0].from_level} 升至 ${levelUpgrade[0].to_level}，需 ${levelUpgrade[0].required_count} 个 ${levelUpgrade[0].required_referral_level}；团队加速 ${levelUpgrade[0].team_acceleration}% ，全球分红 ${levelUpgrade[0].shareholder_dividend}%`
                 : ''
@@ -185,11 +187,11 @@ const StakingDapp = () => {
         {
             icon: <TrendingUp className="text-orange-600" />,
             label: "团队业绩",
-            value: `${user?.teamPerformance ?? '0'} USDC`
+            value: `${teamEarnings ?? '0'} USDC` // 使用获取的团队业绩
         }
     ];
 
-    // 如果用户未登录，显示登录提示
+    // 用户未登录时显示提示
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -224,17 +226,17 @@ const StakingDapp = () => {
                 transition={{ duration: 0.5 }}
             >
                 {/* 顶部统计卡片 */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    {statsCards.map((card, index) => (
-                        <StatsCard key={index} {...card} />
-                    ))}
+                <div className="bg-white shadow rounded-lg p-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {statsCards.map((card, index) => (
+                            <StatsCard key={index} {...card} />
+                        ))}
+                    </div>
                 </div>
-
-
 
                 {/* 质押面板 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="bg-white shadow rounded-lg p-6">
                         <h3 className="text-lg font-semibold mb-4">创建质押包</h3>
                         <div className="space-y-4">
                             <div>
@@ -269,10 +271,12 @@ const StakingDapp = () => {
                     </div>
 
                     {/* 奖励面板 */}
+                    <div className="bg-white shadow rounded-lg p-6">
                     <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
+                    </div>
                 </div>
-                
-                                {/* 代币列表组件 */}
+
+                {/* 代币列表组件 */}
                 <TokenList />
                 {/* 活跃质押包列表 */}
                 {packages.length > 0 && (
@@ -290,12 +294,10 @@ const StakingDapp = () => {
                     </div>
                 )}
 
-                {/* 推荐面板，传入登录成功返回的用户信息 */}
+                {/* 推荐面板 */}
                 <ReferralPanel user={user} />
-
-                {/* 等级指南，新传入接口返回的数组数据 */}
+                {/* 等级指南 */}
                 <LevelGuide userInfo={user} levels={levelUpgrade || []} />
-                
             </motion.div>
         </div>
     );

@@ -11,9 +11,9 @@ import { User, Wallet } from "lucide-react";
 import { connectToPhantomWallet } from "@/utils/wallet";
 
 /**
- * AuthPage：登录/注册页面  
+ * AuthPage：登录/注册页面
  * - 页面挂载时检查 localStorage 中的 token 是否存在且有效，若有效直接跳转到主页面  
- * - 注册成功后先校验 token，再跳转到主页面  
+ * - 注册成功后先校验 token，再跳转到主页面
  */
 export default function AuthPage() {
   const { user } = useUser();
