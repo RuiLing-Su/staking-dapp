@@ -152,8 +152,15 @@ const StakingDapp = () => {
             showNotification("请先登录并输入质押金额", "error");
             return;
         }
+
+        if (!((window as any).solana)) {
+            alert("请先安装 Phantom 钱包");
+            return;
+        }
+
         try {
             setLoading(true);
+            await (window as any).solana.connect(); // 请求钱包连接
             setShowRecharge(true);
             const amount = Number(stakeAmount);
             if (amount < 100) {
