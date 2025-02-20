@@ -46,7 +46,7 @@ const ReferralPanel = ({ user }: { user: { invite_code: string } | null }) => {
                     type="text"
                     readOnly
                     value={referralLink}
-                    className="w-4/6 px-4 py-2 rounded-lg border bg-white focus:outline-none"
+                    className="flex-1 px-4 py-2 rounded-lg border bg-white focus:outline-none"
                 />
                 <button
                     onClick={handleCopy}
