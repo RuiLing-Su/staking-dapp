@@ -380,13 +380,13 @@ const StakingDapp = () => {
                     </div>
                 )}
 
-                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">
+                {/*<div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">*/}
 
-                    <WithdrawComponent
-                        userWalletAddress={user.wallet_address}
-                        systemWalletAddress={systemWallet.wallet_address}
-                    />
-                </div>
+                {/*    <WithdrawComponent*/}
+                {/*        userWalletAddress={user.wallet_address}*/}
+                {/*        systemWalletAddress={systemWallet.wallet_address}*/}
+                {/*    />*/}
+                {/*</div>*/}
 
             </motion.div>
         </div>
