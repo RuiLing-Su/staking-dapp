@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '@/types/authTypes';
 import { WithdrawRecord } from '@/types/stakingTypes';
 import { stakingApi } from '@/api/staking';
+import { authApi } from '@/api/auth';
+import { set } from '@project-serum/anchor/dist/cjs/utils/features';
 
 interface RewardsPanelProps {
   loading: boolean;
@@ -17,16 +18,8 @@ interface RewardsPanelProps {
 const RewardsPanel: React.FC<RewardsPanelProps> = ({ loading, onClaim }) => {
   const [records, setRecords] = useState<WithdrawRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
-
-  // 计算待领取收益（所有状态为pending的记录actual_amount总和）
-  const pendingRewards = records
-    .filter(record => record.withdrawal_status === 'pending')
-    .reduce((sum, record) => sum + Number(record.actual_amount), 0);
-
-  // 计算累计收益（所有记录的actual_amount总和）
-  const totalRewards = records
-    .reduce((sum, record) => sum + Number(record.actual_amount), 0);
-
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [withdrawnEarnings, setWithdrawnEarnings] = useState(0);
   useEffect(() => {
     const fetchRecords = async () => {
       setLoadingRecords(true);
@@ -40,8 +33,25 @@ const RewardsPanel: React.FC<RewardsPanelProps> = ({ loading, onClaim }) => {
       }
     };
 
+    const fetchUserEarnings = async () => {
+      try {
+        const res = await authApi.getCurrentUser();
+        setTotalEarnings(Number(res.account.total_earnings));
+        setWithdrawnEarnings(Number(res.account.withdrawn_earnings));
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+      }
+    };
+
     fetchRecords();
+    fetchUserEarnings();
   }, []);
+
+  // 计算待领取收益（所有状态为pending的记录actual_amount总和）
+  const pendingRewards = totalEarnings - withdrawnEarnings;
+
+  // 使用从用户信息中获取的总收益
+  const totalRewards = totalEarnings;
 
   const handleClaim = async () => {
     if (window.confirm(`确认提现 ${pendingRewards.toFixed(3)} USDC?`)) {

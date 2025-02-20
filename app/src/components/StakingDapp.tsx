@@ -15,7 +15,7 @@ import { authApi } from '@/api/auth';
 import '@/app/globals.css';
 import Link from 'next/link';
 import { stakingApi } from '@/api/staking';
-
+import TokenList from '@/components/TokenList'; // 引入 TokenList 组件
 interface Notification {
     message: string;
     type: 'success' | 'error';
@@ -230,6 +230,8 @@ const StakingDapp = () => {
                     ))}
                 </div>
 
+
+
                 {/* 质押面板 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-gray-50 p-6 rounded-lg">
@@ -269,7 +271,9 @@ const StakingDapp = () => {
                     {/* 奖励面板 */}
                     <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
                 </div>
-
+                
+                                {/* 代币列表组件 */}
+                <TokenList />
                 {/* 活跃质押包列表 */}
                 {packages.length > 0 && (
                     <div className="mb-8">
@@ -291,12 +295,7 @@ const StakingDapp = () => {
 
                 {/* 等级指南，新传入接口返回的数组数据 */}
                 <LevelGuide userInfo={user} levels={levelUpgrade || []} />
-
-                <div className="mb-8 text-center">
-                    <Link href="/token" className="text-blue-500 hover:underline">
-                        查看代币列表
-                    </Link>
-                </div>
+                
             </motion.div>
         </div>
     );

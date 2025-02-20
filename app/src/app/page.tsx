@@ -71,18 +71,7 @@ export default function Home() {
                         <h1 className="text-2xl font-bold text-gray-800">SolEdge</h1>
                     </div>
                     <nav className="flex items-center gap-4">
-                        <Link 
-                            href="/recharge" 
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            充值
-                        </Link>
-                        <Link 
-                            href="/token" 
-                            className="text-blue-600 hover:text-blue-700 hover:underline transition"
-                        >
-                            代币购买
-                        </Link>
+
                         <div className="relative">
                             <button
                                 onClick={handleConnect}
@@ -135,7 +124,7 @@ export default function Home() {
 
                 {/* 页脚 */}
                 <footer className="mt-16 text-center text-gray-500 text-sm">
-                    <p>© 2025 Solana Staking DApp. All rights reserved.</p>
+                    <p>© 2025 SolEdge. All rights reserved.</p>
                 </footer>
             </div>
         </main>
