@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, TrendingUp } from 'lucide-react';
+import { authApi } from '@/api/auth'; // 确保引入正确的 API
 
 interface ReferralUserProps {
-  // 定义 user 对象的类型
   user: {
     address: string;
     stakingAmount: number;
@@ -28,13 +28,6 @@ interface UserReferrals {
   teamPerformance: number;
 }
 
-/**
- * 推荐用户数据（模拟）
- * @param user
- * @param level
- * @param isIndirect
- * @constructor
- */
 const ReferralUser: React.FC<ReferralUserProps> = ({ user, level, isIndirect }) => (
   <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
     <div className="flex items-center justify-between">
@@ -44,15 +37,11 @@ const ReferralUser: React.FC<ReferralUserProps> = ({ user, level, isIndirect }) 
         </div>
         <div>
           <p className="font-medium">{user.address.slice(0, 6)}...{user.address.slice(-4)}</p>
-          <p className="text-sm text-gray-500">
-            质押: {user.stakingAmount} USDC
-          </p>
+          <p className="text-sm text-gray-500">质押: {user.stakingAmount} USDC</p>
         </div>
       </div>
       <div className="flex flex-col items-end">
-        <span className={`px-2 py-1 rounded-full text-xs ${
-          isIndirect ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-        }`}>
+        <span className={`px-2 py-1 rounded-full text-xs ${isIndirect ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
           {isIndirect ? '间推' : '直推'}
         </span>
         <span className="text-sm text-gray-500 mt-1">V{level}</span>
@@ -69,60 +58,41 @@ const ReferralSystem = () => {
     teamPerformance: 0,
   });
 
-  // 模拟获取推荐数据
+  // 从接口获取推荐数据
   const fetchReferralData = async () => {
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await authApi.getInvitations();
+      
+      const directReferrals = response["direct invites"].map(invite => ({
+        address: invite.inviteeNickname, // 根据接口数据适配
+        stakingAmount: 0, // 或者根据需要设置
+        joinTime: new Date(invite.invitationTime),
+        level: 1, // 根据需要设置
+        performance: 0, // 根据需要设置
+      }));
 
-    // 模拟直推用户数据
-    const mockDirectReferrals: Referral[] = [
-      {
-        address: '0x1234567890abcdef1234567890abcdef12345678',
-        stakingAmount: 1000,
-        joinTime: new Date('2024-01-01'),
-        level: 1,
-        performance: 1000,
-      },
-      {
-        address: '0xabcdef1234567890abcdef1234567890abcdef12',
-        stakingAmount: 2000,
-        joinTime: new Date('2024-01-15'),
-        level: 2,
-        performance: 2000,
-      }
-    ];
+      const indirectReferrals = response["indirect invites"].map(invite => ({
+        address: invite.inviteeNickname, // 根据接口数据适配
+        stakingAmount: 0, // 或者根据需要设置
+        joinTime: new Date(invite.invitationTime),
+        level: 1, // 根据需要设置
+        performance: 0, // 根据需要设置
+        referredBy: invite.inviterNickname, // 引导者昵称
+      }));
 
-    // 模拟间推用户数据
-    const mockIndirectReferrals: Referral[] = [
-      {
-        address: '0x9876543210fedcba9876543210fedcba98765432',
-        stakingAmount: 500,
-        joinTime: new Date('2024-01-05'),
-        level: 1,
-        performance: 500,
-        referredBy: mockDirectReferrals[0].address,
-      },
-      {
-        address: '0xfedcba9876543210fedcba9876543210fedcba98',
-        stakingAmount: 1500,
-        joinTime: new Date('2024-01-20'),
-        level: 1,
-        performance: 1500,
-        referredBy: mockDirectReferrals[1].address,
-      }
-    ];
+      // 计算团队业绩
+      const totalPerformance = directReferrals.reduce((sum, user) => sum + user.performance, 0) +
+                               indirectReferrals.reduce((sum, user) => sum + user.performance, 0);
 
-    // 计算团队业绩
-    const totalPerformance = [
-      ...mockDirectReferrals,
-      ...mockIndirectReferrals
-    ].reduce((sum, user) => sum + user.performance, 0);
-
-    setUserReferrals({
-      directReferrals: mockDirectReferrals,
-      indirectReferrals: mockIndirectReferrals,
-      teamPerformance: totalPerformance,
-    });
+      setUserReferrals({
+        directReferrals,
+        indirectReferrals,
+        teamPerformance: totalPerformance,
+      });
+    } catch (error) {
+      console.error('获取推荐数据失败：', error);
+      // 处理错误
+    }
   };
 
   // 首次加载时获取数据
@@ -138,7 +108,7 @@ const ReferralSystem = () => {
       (
         [...userReferrals.directReferrals, ...userReferrals.indirectReferrals]
           .reduce((sum, user) => sum + user.stakingAmount, 0) || 0
-      ) / (userReferrals.directReferrals.length + userReferrals.indirectReferrals.length)
+      ) / (userReferrals.directReferrals.length + userReferrals.indirectReferrals.length || 1) // 防止除以零
     ),
   };
 

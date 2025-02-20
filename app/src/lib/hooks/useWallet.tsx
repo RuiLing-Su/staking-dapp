@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback, createContext, useContext, useEffect } from 'react';
 import { WalletState, WalletContextState } from '@/types/walletTypes';
+import { authApi } from '@/api/auth';
+import { RegisterCredentials } from '@/types/authTypes';
 
 const initialState: WalletState = {
     walletAddress: null,
@@ -14,8 +16,18 @@ const WalletContext = createContext<WalletContextState>({} as WalletContextState
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, setState] = useState<WalletState>(initialState);
+    const [inviteCode, setInviteCode] = useState<string | undefined>(undefined);
 
-    const connect = useCallback(async (onlyIfTrusted = false) => {
+    useEffect(() => {
+        // 从 URL 中获取邀请码
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        if (code) {
+            setInviteCode(code);
+        }
+    }, []);
+
+    const connect = useCallback(async () => {
         if (state.connecting || state.connected) return;
 
         try {
@@ -28,21 +40,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 throw new Error('Phantom 钱包未安装');
             }
 
-            let resp;
-            try {
-                resp = await provider.connect({ onlyIfTrusted });
-            } catch (err) {
-                // 如果 Eager Connection 失败，尝试普通连接
-                if (onlyIfTrusted) {
-                    console.warn('Eager Connection 失败，尝试普通连接...');
-                    resp = await provider.connect();
-                } else {
-                    throw err;
-                }
-            }
-
+            const resp = await provider.connect();
             const walletAddress = resp.publicKey.toString();
             console.log('钱包地址:', walletAddress);
+
+            // 随机生成昵称
+            const nickname = `user_${Math.floor(Math.random() * 10000)}`;
+            const defaultAvatar = "/human.png";
+
+            const credentials: RegisterCredentials = {
+                nickname,
+                wallet_address: walletAddress,
+                invite_code: inviteCode,
+                avatar: defaultAvatar,
+            };
+
+            await authApi.register(credentials);
 
             setState({
                 walletAddress,
@@ -50,19 +63,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 connecting: false,
                 error: null
             });
-            console.log('钱包连接成功');
+            console.log('钱包连接成功并用户注册/登录成功');
 
         } catch (error) {
-            if (error instanceof Error && error.message.includes("rate limited")) {
-                alert("操作过于频繁，请稍后再试");
-            }
-            console.error('钱包连接失败:', error);
+            console.error('钱包连接或用户注册/登录失败:', error);
             setState(prev => ({
                 ...initialState,
-                error: error instanceof Error ? error : new Error('钱包连接失败')
+                error: error instanceof Error ? error : new Error('钱包连接或用户注册/登录失败')
             }));
         }
-    }, [state.connecting, state.connected]);
+    }, [state.connecting, state.connected, inviteCode]);
 
     const disconnect = useCallback(async () => {
         console.log('断开钱包连接...');
@@ -70,6 +80,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (provider && provider.isConnected) {
             await provider.disconnect();
         }
+        await authApi.logout();
         setState(initialState);
     }, []);
 
@@ -82,7 +93,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }));
             alert(`切换到账户 ${publicKey.toBase58()}`);
         } else {
-            // 提示用户选择账户或重新连接
             alert('未选择账户，请选择一个账户或重新连接钱包');
             setState(initialState);
         }
@@ -121,3 +131,4 @@ export const useWallet = (): WalletContextState => {
     }
     return context;
 };
+

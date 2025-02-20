@@ -24,7 +24,6 @@ export const authApi = {
         if (typeof window !== 'undefined') {
             localStorage.removeItem('access');
         }
-        await api.post('/logout');
     },
 
     getCurrentUser: async (): Promise<LoginResponse> => {
@@ -50,4 +49,8 @@ export const authApi = {
         const response = await api.get('/team_earnings');
         return response.data;
     },
+    getinvitations: async (): Promise<any> => {
+        const response = await api.get('/invitations');
+        return response.data;
+    }
 };

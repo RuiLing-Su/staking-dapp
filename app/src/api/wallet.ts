@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { createApiClient } from './baseApi';
+
+const api = createApiClient();
 
 export const getSystemWallet = async () => {
-    const response = await axios.get('/wallets');
+    const response = await api.get('/wallets');
     return response.data;
 };
