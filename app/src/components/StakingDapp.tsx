@@ -22,6 +22,7 @@ import WithdrawComponent from "@/components/WithdrawComponent";
 import TokenComponent from "@/components/TokenComponent";
 import { tokenApi, MemeToken } from '@/api/token';
 import { XCircle } from 'lucide-react';
+import ReferralSystem from "@/components/ReferralSystem";
 
 interface Notification {
     message: string;
@@ -65,17 +66,16 @@ const StakingDapp = () => {
     useEffect(() => {
         const token = localStorage.getItem("access");
         if (!token) {
-            router.push("/auth");
             return;
         }
+
         authApi.validateToken().then((valid) => {
             if (!valid) {
-                router.push("/auth");
             } else {
                 refreshUser();
             }
         }).catch((err) => {
-            console.error("token校验错误: ", err);
+            console.error("Token validation error: ", err);
             router.push("/auth");
         });
     }, [router]);
@@ -110,6 +110,35 @@ const StakingDapp = () => {
             fetchTeamEarnings();
         }
     }, [user]);
+
+    // 获取推荐数据
+    useEffect(()=> {
+        const fetchReferralData = async () => {
+            try {
+                const response = await authApi.getinvitations();
+                if (response["direct_invites"] && response["indirect_invites"]) {
+                    const direct = response["direct_invites"].map((invite: { [x: string]: string | number | Date; }) => ({
+                        inviterNickname: invite["inviter_nickname"],
+                        inviteeNickname: invite["invitee_nickname"],
+                        invitationTime: new Date(invite["invitation_time"]),
+                    }));
+
+                    const indirect = response["indirect_invites"].map((invite: { [x: string]: string | number | Date; }) => ({
+                        inviterNickname: invite["inviter_nickname"],
+                        inviteeNickname: invite["invitee_nickname"],
+                        invitationTime: new Date(invite["invitation_time"]),
+                    }));
+
+                } else {
+                    console.error("API 返回的数据格式不符合预期", response);
+                }
+            } catch (error) {
+                console.error("获取推荐数据失败：", error);
+            }
+        };
+
+        fetchReferralData();
+    }, []);
 
     // 显示通知
     const showNotification = (message: string, type: "success" | "error" = "success") => {
@@ -213,23 +242,6 @@ const StakingDapp = () => {
         );
     }
 
-    // 用户未登录时显示提示
-    if (!user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <p className="mb-4 text-lg font-bold">您尚未登录</p>
-                    <Link
-                        href="/auth"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                    >
-                        前往登录/注册
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     const handleTokenClick = async (tokenId: number) => {
         try {
             const tokenDetail = await tokenApi.getTokenDetail(tokenId);
@@ -239,6 +251,7 @@ const StakingDapp = () => {
         }
     };
 
+    // 用户未登录时显示提示
     return (
         <div className="container mx-auto p-4">
             <AnimatePresence>
@@ -303,7 +316,7 @@ const StakingDapp = () => {
 
                     {/* 奖励面板 */}
                     <div className="bg-white shadow rounded-lg p-6">
-                    <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
+                        <RewardsPanel loading={loading} onClaim={handleClaimRewards} />
                     </div>
                 </div>
 
@@ -325,8 +338,9 @@ const StakingDapp = () => {
                     </div>
                 )}
 
-                {/* 推荐面板 */}
-                <ReferralPanel user={user} />
+                {/* 推荐系统 */}
+                <ReferralSystem />
+
                 {/* 等级指南 */}
                 <LevelGuide userInfo={user} levels={levelUpgrade || []} />
 

@@ -51,10 +51,7 @@ export default function Home() {
         }
     };
 
-    // 如果尚未挂载或认证尚未完成，则只显示加载状态
-    if (!mounted || !isAuthenticated) {
-        return <div>加载中...</div>;
-    }
+
 
     return (
         <main className="min-h-screen p-4 md:p-8 bg-gray-50">
