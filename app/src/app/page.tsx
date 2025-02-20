@@ -42,8 +42,9 @@ export default function Home() {
         try {
             if (!connected) {
                 await connect();
+            }else {
+                setMenuOpen(true);
             }
-            setMenuOpen(true); 
         } catch (error) {
             console.error("连接钱包失败:", error);
             alert("连接钱包失败，请检查是否安装了 Phantom 钱包");
