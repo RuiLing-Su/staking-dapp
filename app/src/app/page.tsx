@@ -136,7 +136,7 @@ export default function Home() {
 
                 {/* 页脚 */}
                 <footer className="mt-16 text-center text-gray-500 text-sm">
-                    <p>© 2025 Solana Staking DApp. All rights reserved.</p>
+                    <p>© 2025 SolEdge. All rights reserved.</p>
                 </footer>
             </div>
         </main>

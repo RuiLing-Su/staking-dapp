@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Share2 } from "lucide-react";
+import { Share2, Copy, Check } from "lucide-react";
 
 /**
  * 推荐面板组件
@@ -50,11 +50,13 @@ const ReferralPanel = ({ user }: { user: { invite_code: string } | null }) => {
                 />
                 <button
                     onClick={handleCopy}
-                    className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                        copied ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-700'
-                    } text-white`}
+                    className="p-2 focus:outline-none"
                 >
-                    {copied ? '已复制' : '复制'}
+                    {copied ? (
+                        <Check className="w-6 h-6 text-green-500" />
+                    ) : (
+                        <Copy className="w-6 h-6 text-blue-600" />
+                    )}
                 </button>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4">
