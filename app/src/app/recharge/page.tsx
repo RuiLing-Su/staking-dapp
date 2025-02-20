@@ -10,14 +10,22 @@ export default function RechargePage() {
   // 固定钱包地址
   const ourWalletAddress = "EgKGYMCqfSfm4zHHRv2qNcHFg5tQizSmKTkLK1shN83"; // 我方钱包（用于付款）
   const systemWalletAddress = "5gW28wXcW3Ff75xAaMVWu43U3ZopQECfMjccLAk2m9TT"; // 系统钱包（收款方）
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
   // SOL 充值相关状态
   const [copiedOur, setCopiedOur] = useState(false);
   const [copiedSystem, setCopiedSystem] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState("");
   const [txLoading, setTxLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
   // 代币充值相关状态（SPL Token 操作）
   const [tokenAmount, setTokenAmount] = useState("");
   const [tokenTxLoading, setTokenTxLoading] = useState(false);
@@ -25,7 +33,11 @@ export default function RechargePage() {
   // 固定代币 Mint 地址 (示例使用 Devnet 上的测试代币，代币采用 9 位小数)
   const tokenMintAddress = "3rQBaAAfLxUXddEhqa1dj2gKS53ZdcNKcwYP3Qz3gs7D";
   const tokenDecimals = 9;
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
   // 复制地址到剪贴板（两钱包均用此方法）
   const copyToClipboard = (text: string, type: "our" | "system") => {
     navigator.clipboard.writeText(text).then(() => {
@@ -40,6 +52,7 @@ export default function RechargePage() {
       console.error("复制失败", err);
     });
   };
+<<<<<<< HEAD
   
   // 发起 SOL 充值（转账）操作
   const handleRecharge = async () => {
@@ -48,24 +61,50 @@ export default function RechargePage() {
       return;
     }
   
+=======
+
+  // 发起 SOL 充值（转账）操作
+  const handleRecharge = async () => {
+    if (!((window as any) as any).solana) {
+      alert("请先安装 Phantom 钱包");
+      return;
+    }
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
     if (!rechargeAmount || isNaN(Number(rechargeAmount)) || Number(rechargeAmount) <= 0) {
       setNotification({ message: "请输入有效的充值金额", type: "error" });
       return;
     }
+<<<<<<< HEAD
   
     try {
       setTxLoading(true);
       // 连接 Phantom 钱包
       await window.solana.connect();
       const fromPubkey = window.solana.publicKey;
+=======
+
+    try {
+      setTxLoading(true);
+      // 连接 Phantom 钱包
+      await (window as any).solana.connect();
+      const fromPubkey = (window as any).solana.publicKey;
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       if (!fromPubkey) {
         setNotification({ message: "无法获取钱包地址", type: "error" });
         return;
       }
+<<<<<<< HEAD
   
       // 使用 Solana Devnet（如有需要，可换成主网地址）
       const connection = new Connection("https://api.devnet.solana.com", "confirmed");
   
+=======
+
+      // 使用 Solana Devnet（如有需要，可换成主网地址）
+      const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 构造转账交易：从用户付款钱包向系统钱包转账 SOL
       const transaction = new Transaction().add(
           SystemProgram.transfer({
@@ -74,6 +113,7 @@ export default function RechargePage() {
             lamports: Math.floor(parseFloat(rechargeAmount) * LAMPORTS_PER_SOL),
           })
       );
+<<<<<<< HEAD
   
       transaction.feePayer = fromPubkey;
       const { blockhash } = await connection.getRecentBlockhash();
@@ -85,6 +125,19 @@ export default function RechargePage() {
       const txid = await connection.sendRawTransaction(signed.serialize());
       await connection.confirmTransaction(txid, "confirmed");
   
+=======
+
+      transaction.feePayer = fromPubkey;
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+
+      // 请求用户使用 Phantom 钱包签名交易
+      const signed = await (window as any).solana.signTransaction(transaction);
+      // 发送交易到网络并确认
+      const txid = await connection.sendRawTransaction(signed.serialize());
+      await connection.confirmTransaction(txid, "confirmed");
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       setNotification({ message: `充值成功，交易ID: ${txid}`, type: "success" });
     } catch (err: any) {
       console.error("充值失败:", err);
@@ -93,10 +146,17 @@ export default function RechargePage() {
       setTxLoading(false);
     }
   };
+<<<<<<< HEAD
   
   // 发起 SPL Token（代币）充值操作
   const handleTokenRecharge = async () => {
     if (!window.solana) {
+=======
+
+  // 发起 SPL Token（代币）充值操作
+  const handleTokenRecharge = async () => {
+    if (!(window as any).solana) {
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       alert("请先安装 Phantom 钱包");
       return;
     }
@@ -104,23 +164,41 @@ export default function RechargePage() {
       setTokenNotification({ message: "请输入有效的代币充值数量", type: "error" });
       return;
     }
+<<<<<<< HEAD
   
     try {
       setTokenTxLoading(true);
       await window.solana.connect();
       const fromPubkey = window.solana.publicKey;
+=======
+
+    try {
+      setTokenTxLoading(true);
+      await (window as any).solana.connect();
+      const fromPubkey = (window as any).solana.publicKey;
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       if (!fromPubkey) {
         setTokenNotification({ message: "无法获取钱包地址", type: "error" });
         return;
       }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 使用 Devnet 连接（可替换为其他网络）
       const connection = new Connection("https://api.devnet.solana.com", "confirmed");
       const tokenMint = new PublicKey(tokenMintAddress);
       const systemPubkey = new PublicKey(systemWalletAddress);
+<<<<<<< HEAD
   
       // 准备手续费：由用户钱包支付
   
+=======
+
+      // 准备手续费：由用户钱包支付
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 计算发送方（用户）的关联代币账户地址（ATA）
       const senderTokenAddress = await splToken.getAssociatedTokenAddress(tokenMint, fromPubkey);
       const senderAccountInfo = await connection.getAccountInfo(senderTokenAddress);
@@ -136,7 +214,11 @@ export default function RechargePage() {
             )
         );
       }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 对于接收方（系统钱包）的关联代币账户
       const receiverTokenAddress = await splToken.getAssociatedTokenAddress(tokenMint, systemPubkey);
       const receiverAccountInfo = await connection.getAccountInfo(receiverTokenAddress);
@@ -150,7 +232,11 @@ export default function RechargePage() {
             )
         );
       }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 添加代币转账的指令
       const amountNumber = Math.floor(parseFloat(tokenAmount) * Math.pow(10, tokenDecimals));
       const transferIx = splToken.createTransferInstruction(
@@ -162,19 +248,32 @@ export default function RechargePage() {
           splToken.TOKEN_PROGRAM_ID
       );
       instructions.push(transferIx);
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       // 构造交易并添加指令
       const transaction = new Transaction();
       instructions.forEach(ix => transaction.add(ix));
       transaction.feePayer = fromPubkey;
       const { blockhash } = await connection.getRecentBlockhash();
       transaction.recentBlockhash = blockhash;
+<<<<<<< HEAD
   
       // 请求钱包签名并发送交易
       const signed = await window.solana.signTransaction(transaction);
       const txid = await connection.sendRawTransaction(signed.serialize());
       await connection.confirmTransaction(txid, "confirmed");
   
+=======
+
+      // 请求钱包签名并发送交易
+      const signed = await (window as any).solana.signTransaction(transaction);
+      const txid = await connection.sendRawTransaction(signed.serialize());
+      await connection.confirmTransaction(txid, "confirmed");
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
       setTokenNotification({ message: `代币充值成功，交易ID: ${txid}`, type: "success" });
     } catch (err: any) {
       console.error("代币充值失败:", err);
@@ -183,11 +282,19 @@ export default function RechargePage() {
       setTokenTxLoading(false);
     }
   };
+<<<<<<< HEAD
   
   return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">
         <h1 className="text-3xl font-bold">钱包充值页面</h1>
   
+=======
+
+  return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">
+        <h1 className="text-3xl font-bold">钱包充值页面</h1>
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
         {/* 固定钱包地址及复制功能 */}
         <div className="space-y-4">
           <div className="bg-white shadow rounded-lg p-6 w-full max-w-md">
@@ -201,7 +308,11 @@ export default function RechargePage() {
               <span>{copiedOur ? "已复制" : "复制地址"}</span>
             </button>
           </div>
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
           <div className="bg-white shadow rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-2">系统钱包 (负责收款)</h2>
             <p className="break-all text-gray-700 mb-2">{systemWalletAddress}</p>
@@ -214,7 +325,11 @@ export default function RechargePage() {
             </button>
           </div>
         </div>
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
         {/* SOL 充值操作区域 */}
         <div className="bg-white shadow rounded-lg p-6 w-full max-w-md space-y-4">
           <h2 className="text-xl font-semibold">SOL 充值操作</h2>
@@ -238,7 +353,11 @@ export default function RechargePage() {
               </div>
           )}
         </div>
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
         {/* SPL Token 充值操作区域 */}
         <div className="bg-white shadow rounded-lg p-6 w-full max-w-md space-y-4">
           <h2 className="text-xl font-semibold">代币充值操作</h2>
@@ -265,7 +384,11 @@ export default function RechargePage() {
               </div>
           )}
         </div>
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
         <Link href="/" className="mt-4 text-blue-600 hover:underline">
           返回主页
         </Link>

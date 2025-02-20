@@ -26,11 +26,19 @@ const LevelGuide: React.FC<LevelGuideProps> = ({ userInfo, levels }) => {
     return (
         <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-6">等级说明</h3>
+<<<<<<< HEAD
             <div className="space-y-4"> {/* 使用 space-y-4 进行垂直间距 */}
                 {levels.map((level, index) => (
                     <div
                         key={index}
                         className={`p-6 rounded-xl border transition-all ${
+=======
+            <div className="flex flex-col gap-4 pb-4">
+                {levels.map((level, index) => (
+                    <div
+                        key={index}
+                        className={`min-w-[220px] p-6 rounded-xl border transition-all ${
+>>>>>>> a307987adb91b8fa32ee8449fb8043d03530d977
                             userInfo?.level === level.from_level
                                 ? 'border-blue-300 bg-blue-50 shadow-lg scale-[1.02]'
                                 : 'border-gray-200 bg-white hover:shadow-md'
