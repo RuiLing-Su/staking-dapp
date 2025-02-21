@@ -145,7 +145,7 @@ const StakingDapp = () => {
                 return;
             }
 
-            const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT, "confirmed");
+            const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT as string, "confirmed");
             const usdcMintAddress = new PublicKey(process.env.NEXT_PUBLIC_USDC_ADDRESS as string);
 
             const senderUsdcAddress = await splToken.getAssociatedTokenAddress(usdcMintAddress, fromPubkey);
