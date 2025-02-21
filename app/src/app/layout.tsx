@@ -8,8 +8,8 @@ import AuthRouteGuard from '@/components/AuthRouteGuard';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-    title: 'Staking Dapp',
-    description: '去中心化质押应用',
+    title: 'SolEdge',
+    description: 'SolEdge质押应用',
 };
 
 export default function RootLayout({

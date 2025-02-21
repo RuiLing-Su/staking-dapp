@@ -23,9 +23,17 @@ import TokenComponent from "@/components/TokenComponent";
 import { tokenApi, MemeToken } from '@/api/token';
 import { XCircle } from 'lucide-react';
 import ReferralSystem from "@/components/ReferralSystem";
-import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+    Connection,
+    LAMPORTS_PER_SOL,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+    TransactionInstruction
+} from "@solana/web3.js";
 import { createTransferInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import * as splToken from "@solana/spl-token";
+import { VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 
 interface Notification {
     message: string;
@@ -147,7 +155,13 @@ const StakingDapp = () => {
             const senderUsdcAddress = await splToken.getAssociatedTokenAddress(usdcMintAddress, fromPubkey);
             const receiverUsdcAddress = await splToken.getAssociatedTokenAddress(usdcMintAddress, new PublicKey(systemWallet.wallet_address));
 
-            const amountNumber = parseFloat(stakeAmount);
+            const amountNumber = Math.floor(parseFloat(stakeAmount) * Math.pow(10, 6));
+
+            // 检查转账金额是否大于0
+            if (amountNumber <= 0) {
+                setNotification({ message: "转账金额必须大于0", type: "error" });
+                return false;
+            }
 
             // 创建转账交易
             const transferIx = splToken.createTransferInstruction(
@@ -158,17 +172,46 @@ const StakingDapp = () => {
                 [],
                 splToken.TOKEN_PROGRAM_ID
             );
-            const transaction = new Transaction().add(transferIx);
 
+            // 获取最新的 blockhash 和 lastValidBlockHeight
+            const {
+                context: { slot: minContextSlot },
+                value: { blockhash, lastValidBlockHeight },
+            } = await connection.getLatestBlockhashAndContext();
+
+            const transaction = new Transaction().add(transferIx);
             transaction.feePayer = fromPubkey;
-            const { blockhash } = await connection.getRecentBlockhash();
             transaction.recentBlockhash = blockhash;
 
-            const signed = await (window as any).solana.signTransaction(transaction);
-            const txid = await connection.sendRawTransaction(signed.serialize());
-            await connection.confirmTransaction(txid, "confirmed");
+            // 创建适配器方法，将 Transaction 转换为 VersionedTransaction
+            const toVersionedTransaction = (transaction: Transaction, blockhash: string, fromPubkey: PublicKey): VersionedTransaction => {
+                const instructions: TransactionInstruction[] = transaction.instructions;
 
-            setNotification({ message: `充值成功，交易ID: ${txid}`, type: "success" });
+                // 创建一个消息对象
+                const message = new TransactionMessage({
+                    payerKey: fromPubkey,
+                    recentBlockhash: blockhash,
+                    instructions: instructions,
+                });
+
+                // 生成 VersionedTransaction 对象
+                const versionedTx = new VersionedTransaction(message.compileToV0Message());
+                return versionedTx;
+            };
+
+            // 转换为 VersionedTransaction
+            const versionedTransaction = toVersionedTransaction(transaction, blockhash, fromPubkey);
+
+            // 签名交易
+            const signed = await (window as any).solana.signTransaction(versionedTransaction);
+
+            // 发送交易
+            const signature = await connection.sendTransaction(signed, { skipPreflight: false, preflightCommitment: "confirmed" });
+
+            // 确认交易
+            await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature });
+
+            setNotification({ message: `充值成功，交易ID: ${signature}`, type: "success" });
             return true;
         } catch (err: any) {
             console.error("充值失败:", err);
