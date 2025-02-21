@@ -23,6 +23,9 @@ import TokenComponent from "@/components/TokenComponent";
 import { tokenApi, MemeToken } from '@/api/token';
 import { XCircle } from 'lucide-react';
 import ReferralSystem from "@/components/ReferralSystem";
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { createTransferInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import * as splToken from "@solana/spl-token";
 
 interface Notification {
     message: string;
@@ -51,6 +54,7 @@ const StakingDapp = () => {
     const [selectedToken, setSelectedToken] = useState<MemeToken | null>(null);
     const [showRecharge, setShowRecharge] = useState(false);
     const router = useRouter();
+    const [txLoading, setTxLoading] = useState(false);
 
     // 刷新用户信息
     const refreshUser = async () => {
@@ -111,39 +115,68 @@ const StakingDapp = () => {
         }
     }, [user]);
 
-    // 获取推荐数据
-    useEffect(()=> {
-        const fetchReferralData = async () => {
-            try {
-                const response = await authApi.getinvitations();
-                if (response["direct_invites"] && response["indirect_invites"]) {
-                    const direct = response["direct_invites"].map((invite: { [x: string]: string | number | Date; }) => ({
-                        inviterNickname: invite["inviter_nickname"],
-                        inviteeNickname: invite["invitee_nickname"],
-                        invitationTime: new Date(invite["invitation_time"]),
-                    }));
-
-                    const indirect = response["indirect_invites"].map((invite: { [x: string]: string | number | Date; }) => ({
-                        inviterNickname: invite["inviter_nickname"],
-                        inviteeNickname: invite["invitee_nickname"],
-                        invitationTime: new Date(invite["invitation_time"]),
-                    }));
-
-                } else {
-                    console.error("API 返回的数据格式不符合预期", response);
-                }
-            } catch (error) {
-                console.error("获取推荐数据失败：", error);
-            }
-        };
-
-        fetchReferralData();
-    }, []);
-
     // 显示通知
     const showNotification = (message: string, type: "success" | "error" = "success") => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
+    };
+
+    const handleRecharge = async () => {
+        if (!((window as any).solana)) {
+            alert("请先安装 Phantom 钱包");
+            return;
+        }
+
+        if (!stakeAmount || isNaN(Number(stakeAmount)) || Number(stakeAmount) <= 0) {
+            setNotification({ message: "请输入有效的充值金额", type: "error" });
+            return;
+        }
+
+        try {
+            setTxLoading(true);
+            await (window as any).solana.connect();
+            const fromPubkey = (window as any).solana.publicKey;
+            if (!fromPubkey) {
+                setNotification({ message: "无法获取钱包地址", type: "error" });
+                return;
+            }
+
+            const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT, "confirmed");
+            const usdcMintAddress = new PublicKey(process.env.NEXT_PUBLIC_USDC_ADDRESS as string);
+
+            const senderUsdcAddress = await splToken.getAssociatedTokenAddress(usdcMintAddress, fromPubkey);
+            const receiverUsdcAddress = await splToken.getAssociatedTokenAddress(usdcMintAddress, new PublicKey(systemWallet.wallet_address));
+
+            const amountNumber = parseFloat(stakeAmount);
+
+            // 创建转账交易
+            const transferIx = splToken.createTransferInstruction(
+                senderUsdcAddress,
+                receiverUsdcAddress,
+                fromPubkey,
+                amountNumber,
+                [],
+                splToken.TOKEN_PROGRAM_ID
+            );
+            const transaction = new Transaction().add(transferIx);
+
+            transaction.feePayer = fromPubkey;
+            const { blockhash } = await connection.getRecentBlockhash();
+            transaction.recentBlockhash = blockhash;
+
+            const signed = await (window as any).solana.signTransaction(transaction);
+            const txid = await connection.sendRawTransaction(signed.serialize());
+            await connection.confirmTransaction(txid, "confirmed");
+
+            setNotification({ message: `充值成功，交易ID: ${txid}`, type: "success" });
+            return true;
+        } catch (err: any) {
+            console.error("充值失败:", err);
+            setNotification({ message: `充值失败: ${err?.message || err}`, type: "error" });
+            return false;
+        } finally {
+            setTxLoading(false);
+        }
     };
 
     // 质押逻辑
@@ -153,23 +186,20 @@ const StakingDapp = () => {
             return;
         }
 
-        if (!((window as any).solana)) {
-            alert("请先安装 Phantom 钱包");
-            return;
-        }
-
         try {
             setLoading(true);
-            await (window as any).solana.connect(); // 请求钱包连接
-            setShowRecharge(true);
             const amount = Number(stakeAmount);
             if (amount < 100) {
                 throw new Error("最低质押金额为 100 USDC");
             }
-            await createStake(amount);
-            setStakeAmount("");
-            showNotification(`成功质押 ${amount} USDC`);
-            await refreshUser();
+
+            const rechargeSuccess = await handleRecharge();
+            if (rechargeSuccess) {
+                await createStake(amount);
+                setStakeAmount("");
+                showNotification(`成功质押 ${amount} USDC`);
+                await refreshUser();
+            }
         } catch (error: any) {
             console.error("质押失败:", error);
             showNotification(error.message, "error");
@@ -344,6 +374,8 @@ const StakingDapp = () => {
                         </div>
                     </div>
                 )}
+
+                <ReferralPanel user={user} />
 
                 {/* 推荐系统 */}
                 <ReferralSystem />
