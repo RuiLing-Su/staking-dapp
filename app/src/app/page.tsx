@@ -4,9 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import './globals.css';
-import useAuth from '@/lib/hooks/useAuth';
-import { useWallet } from '@/lib/hooks/useWallet';
-import WalletContextProvider from '../components/WalletContextProvider';
+import WalletContextProvider from '../lib/context/WalletContextProvider';
 import { AppBar } from '@/components/AppBar';
 
 // 动态导入 StakingDapp 组件
@@ -23,32 +21,6 @@ const StakingDapp = dynamic(
 );
 
 export default function Home() {
-    const { isAuthenticated } = useAuth();
-    const { connected, walletAddress, connect, disconnect, handleAccountChanged } = useWallet();
-    const [mounted, setMounted] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(false);
-
-    // 只在客户端初始化钱包适配器
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setMounted(true);
-        }
-    }, [connect]);
-
-    const handleConnect = async () => {
-        try {
-            if (!connected) {
-                await connect();
-            }else {
-                setMenuOpen(true);
-            }
-        } catch (error) {
-            console.error("连接钱包失败:", error);
-            alert("连接钱包失败，请检查是否安装了 Phantom 钱包");
-        }
-    };
-
-
 
     return (
         <main className="min-h-screen p-4 md:p-8 bg-gray-50">
@@ -69,50 +41,6 @@ export default function Home() {
                             <WalletContextProvider>
                                 <AppBar />
                             </WalletContextProvider>
-                            <div className="relative">
-                                <button
-                                    onClick={handleConnect}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-full"
-                                >
-                                    {connected ? (
-                                        <>
-                                            <Image
-                                                src="/phantomIcon.png"
-                                                alt="phantomIcon"
-                                                width={24}
-                                                height={24}
-                                            />
-                                            <span>{walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : '连接钱包'}</span>
-                                        </>
-                                    ) : (
-                                        '连接钱包'
-                                    )}
-                                </button>
-
-                                {connected && menuOpen && (
-                                    <div className="absolute right-0 mt-2 w-39 bg-black text-white rounded-md shadow-lg py-1">
-                                        <button onClick={() => {
-                                            navigator.clipboard.writeText(walletAddress || '');
-                                            alert("钱包地址已复制");
-                                            setMenuOpen(false);
-                                        }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
-                                            Copy address
-                                        </button>
-                                        <button onClick={async () => {
-                                            await handleAccountChanged(null);
-                                            setMenuOpen(false);
-                                        }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
-                                            Change wallet
-                                        </button>
-                                        <button onClick={async () => {
-                                            await disconnect();
-                                            setMenuOpen(false);
-                                        }} className="block px-4 py-2 text-sm hover:bg-gray-700 w-full text-left">
-                                            Disconnect
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
                         </nav>
                     </header>
 

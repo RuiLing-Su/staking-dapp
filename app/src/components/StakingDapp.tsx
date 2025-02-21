@@ -13,12 +13,9 @@ import Notifications from "@/components/Notification";
 import { useUser } from '@/lib/context/UserContext';
 import { authApi } from '@/api/auth';
 import '@/app/globals.css';
-import Link from 'next/link';
 import { stakingApi } from '@/api/staking';
 import TokenList from '@/components/TokenList';
 import { useSystemWallet } from '@/lib/hooks/useSystemWallet';
-import RechargeComponent from "@/components/RechargeComponent";
-import WithdrawComponent from "@/components/WithdrawComponent";
 import TokenComponent from "@/components/TokenComponent";
 import { tokenApi, MemeToken } from '@/api/token';
 import { XCircle } from 'lucide-react';
@@ -60,7 +57,6 @@ const StakingDapp = () => {
     const [levelUpgrade, setLevelUpgrade] = useState<any[]>([]);
     const [teamEarnings, setTeamEarnings] = useState<string | null>(null);
     const [selectedToken, setSelectedToken] = useState<MemeToken | null>(null);
-    const [showRecharge, setShowRecharge] = useState(false);
     const router = useRouter();
     const [txLoading, setTxLoading] = useState(false);
 
@@ -443,32 +439,6 @@ const StakingDapp = () => {
                         </div>
                     </div>
                 )}
-
-                {/* 动态显示 RechargeComponent */}
-                {showRecharge && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <div className="bg-white p-4 rounded-lg shadow-lg relative">
-                            <button
-                                onClick={() => setShowRecharge(false)}
-                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                            >
-                                <XCircle size={24} />
-                            </button>
-                            <RechargeComponent
-                                userWalletAddress={user.wallet_address}
-                                systemWalletAddress={systemWallet.wallet_address}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/*<div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 space-y-8">*/}
-
-                {/*    <WithdrawComponent*/}
-                {/*        userWalletAddress={user.wallet_address}*/}
-                {/*        systemWalletAddress={systemWallet.wallet_address}*/}
-                {/*    />*/}
-                {/*</div>*/}
 
             </motion.div>
         </div>

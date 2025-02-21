@@ -23,7 +23,7 @@ const ReferralPanel = ({ user }: { user: { invite_code: string } | null }) => {
     }
 
     // 使用返回的 invite_code 字段生成推荐链接
-    const referralLink = `https://app.sol-edge.cc/auth?code=${user.invite_code}`;
+    const referralLink = `https://app.sol-edge.cc?code=${user.invite_code}`;
 
     const handleCopy = async () => {
         try {

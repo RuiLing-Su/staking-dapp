@@ -1,9 +1,9 @@
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/lib/context/AuthContext';
-import { WalletProvider } from "@/lib/hooks/useWallet";
 import { UserProvider } from "@/lib/context/UserContext";
 import './globals.css';
 import AuthRouteGuard from '@/components/AuthRouteGuard';
+import WalletContextProvider from "@/lib/context/WalletContextProvider";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,13 +21,13 @@ export default function RootLayout({
         <html lang="zh">
             <body className={inter.className}>
                 <AuthProvider>
-                    <WalletProvider>
-                        <UserProvider>
+                    <UserProvider>
+                        <WalletContextProvider>
                             <AuthRouteGuard>
                                 {children}
                             </AuthRouteGuard>
-                        </UserProvider>
-                    </WalletProvider>
+                        </WalletContextProvider>
+                    </UserProvider>
                 </AuthProvider>
             </body>
         </html>
